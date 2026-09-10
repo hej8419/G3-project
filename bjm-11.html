@@ -1,0 +1,2012 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Starting a Recycling Project</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
+      background: #f4f8f5;
+      color: #24352b;
+      line-height: 1.6;
+    }
+
+    button,
+    textarea {
+      font-family: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100vh;
+      padding: 24px 16px 50px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 850px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .header-icon {
+      font-size: 42px;
+      margin-bottom: 6px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: clamp(25px, 5vw, 36px);
+      color: #245b3a;
+      letter-spacing: -0.5px;
+    }
+
+    .header p {
+      margin: 7px 0 0;
+      color: #65736a;
+      font-size: 15px;
+    }
+
+    /* Progress */
+    .progress-card {
+      background: white;
+      border-radius: 18px;
+      padding: 16px 18px;
+      box-shadow: 0 5px 18px rgba(30, 70, 45, 0.07);
+      margin-bottom: 18px;
+    }
+
+    .progress-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 9px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .progress-label {
+      color: #356347;
+    }
+
+    .progress-percent {
+      color: #738078;
+    }
+
+    .progress-track {
+      height: 9px;
+      border-radius: 999px;
+      background: #e5ece7;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 20%;
+      border-radius: 999px;
+      background: #4f9a68;
+      transition: width 0.35s ease;
+    }
+
+    /* Common card */
+    .card {
+      background: white;
+      border-radius: 22px;
+      padding: clamp(22px, 5vw, 34px);
+      box-shadow: 0 7px 25px rgba(30, 70, 45, 0.08);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 7px;
+      color: #245b3a;
+      font-size: 23px;
+      letter-spacing: -0.3px;
+    }
+
+    .section-description {
+      margin: 0 0 23px;
+      color: #68746d;
+      font-size: 15px;
+    }
+
+    /* Sentence */
+    .sentence-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 38px;
+      height: 28px;
+      padding: 0 9px;
+      border-radius: 999px;
+      background: #e9f5ec;
+      color: #34734b;
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .sentence-box {
+      background: #f7faf8;
+      border: 1px solid #dce8df;
+      border-radius: 15px;
+      padding: 19px;
+      margin-bottom: 19px;
+    }
+
+    .sentence-text {
+      margin: 0;
+      font-size: clamp(18px, 3.8vw, 22px);
+      font-weight: 650;
+      line-height: 1.55;
+      color: #263b2d;
+    }
+
+    .instruction {
+      margin: 0 0 9px;
+      font-size: 15px;
+      font-weight: 750;
+      color: #3d5145;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 135px;
+      resize: vertical;
+      border: 2px solid #d7e2da;
+      border-radius: 14px;
+      padding: 15px;
+      font-size: 16px;
+      line-height: 1.65;
+      outline: none;
+      background: #fff;
+      color: #25352b;
+      transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+    }
+
+    textarea:focus {
+      border-color: #69a47b;
+      box-shadow: 0 0 0 4px rgba(80, 150, 100, 0.11);
+    }
+
+    textarea::placeholder {
+      color: #a3ada6;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 13px;
+      min-height: 48px;
+      padding: 0 20px;
+      font-size: 15px;
+      font-weight: 800;
+      transition:
+        transform 0.15s,
+        box-shadow 0.15s,
+        opacity 0.15s;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      flex: 1;
+      background: #3f8657;
+      color: white;
+      box-shadow: 0 5px 12px rgba(63, 134, 87, 0.2);
+    }
+
+    .btn-primary:hover {
+      background: #35774b;
+    }
+
+    .btn-secondary {
+      background: #edf3ef;
+      color: #41604c;
+    }
+
+    .btn-secondary:hover {
+      background: #e2ece5;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Answer */
+    .answer-box {
+      display: none;
+      margin-top: 20px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #cfe1d4;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .answer-box.show {
+      display: block;
+    }
+
+    .answer-header {
+      padding: 11px 15px;
+      background: #eaf5ed;
+      color: #326744;
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .answer-content {
+      padding: 17px;
+      background: #fbfdfb;
+    }
+
+    .answer-text {
+      margin: 0 0 13px;
+      font-size: 17px;
+      font-weight: 650;
+    }
+
+    .expression-note {
+      margin: 0;
+      padding: 12px 14px;
+      border-radius: 11px;
+      background: #f1f6f2;
+      color: #516157;
+      font-size: 14px;
+    }
+
+    .expression-note strong {
+      color: #2e6843;
+    }
+
+    .next-row {
+      margin-top: 16px;
+    }
+
+    /* ClassCard */
+    .card-stage {
+      perspective: 1000px;
+      margin: 20px 0;
+    }
+
+    .flashcard {
+      position: relative;
+      width: 100%;
+      height: 310px;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform 0.55s ease;
+    }
+
+    .flashcard.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      text-align: center;
+      border: 1px solid #dce8df;
+    }
+
+    .flashcard-front {
+      background: #f6faf7;
+    }
+
+    .flashcard-back {
+      background: #eaf5ed;
+      transform: rotateY(180deg);
+    }
+
+    .card-small-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #6d7c72;
+      margin-bottom: 13px;
+    }
+
+    .card-expression {
+      font-size: clamp(29px, 7vw, 43px);
+      font-weight: 900;
+      color: #245b3a;
+      letter-spacing: -1px;
+      word-break: keep-all;
+    }
+
+    .tap-hint {
+      margin-top: 18px;
+      color: #849088;
+      font-size: 13px;
+    }
+
+    .meaning {
+      font-size: clamp(22px, 5vw, 30px);
+      font-weight: 900;
+      color: #245b3a;
+      margin-bottom: 20px;
+    }
+
+    .example-box {
+      max-width: 620px;
+      width: 100%;
+      padding: 15px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .example-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: #6a776f;
+      margin-bottom: 4px;
+    }
+
+    .example {
+      font-size: 15px;
+      color: #34463a;
+      line-height: 1.55;
+    }
+
+    .card-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .circle-btn {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 1px solid #d5e1d8;
+      background: white;
+      color: #356347;
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .circle-btn:hover {
+      background: #f0f6f2;
+    }
+
+    .card-counter {
+      min-width: 75px;
+      text-align: center;
+      font-weight: 800;
+      color: #65736a;
+      font-size: 14px;
+    }
+
+    /* Quiz */
+    .quiz-expression {
+      text-align: center;
+      font-size: clamp(30px, 8vw, 45px);
+      font-weight: 900;
+      color: #245b3a;
+      margin: 22px 0 7px;
+      letter-spacing: -1px;
+    }
+
+    .quiz-instruction {
+      text-align: center;
+      color: #69766e;
+      font-size: 14px;
+      margin: 0 0 20px;
+    }
+
+    .choices {
+      display: grid;
+      gap: 11px;
+    }
+
+    .choice {
+      width: 100%;
+      min-height: 54px;
+      border-radius: 13px;
+      border: 2px solid #dbe5de;
+      background: white;
+      color: #34463a;
+      text-align: left;
+      padding: 12px 15px;
+      font-size: 15px;
+      font-weight: 650;
+      transition:
+        border-color 0.15s,
+        background 0.15s,
+        transform 0.1s;
+    }
+
+    .choice:hover:not(:disabled) {
+      border-color: #75a985;
+      background: #f8fbf9;
+    }
+
+    .choice.correct {
+      border-color: #4e9967;
+      background: #eaf6ed;
+      color: #2d7043;
+      font-weight: 850;
+    }
+
+    .choice.wrong {
+      border-color: #d78a8a;
+      background: #fdf0f0;
+      color: #a14c4c;
+    }
+
+    .choice:disabled {
+      cursor: default;
+    }
+
+    .feedback {
+      display: none;
+      margin-top: 16px;
+      padding: 13px 15px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .feedback.show {
+      display: block;
+    }
+
+    .feedback.correct-feedback {
+      background: #eaf6ed;
+      color: #2d7043;
+    }
+
+    .feedback.wrong-feedback {
+      background: #fdf1f1;
+      color: #9b5050;
+    }
+
+    .quiz-next {
+      margin-top: 15px;
+      display: none;
+    }
+
+    .quiz-next.show {
+      display: flex;
+    }
+
+    /* Complete */
+    .complete {
+      text-align: center;
+    }
+
+    .complete-icon {
+      font-size: 58px;
+      margin-bottom: 8px;
+    }
+
+    .complete h2 {
+      margin: 0;
+      color: #245b3a;
+      font-size: 29px;
+    }
+
+    .complete p {
+      color: #69766e;
+      margin: 8px 0 20px;
+    }
+
+    .score-box {
+      background: #f1f7f2;
+      border: 1px solid #d8e6dc;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .score-number {
+      font-size: 42px;
+      font-weight: 950;
+      color: #34734b;
+    }
+
+    .score-label {
+      font-size: 13px;
+      color: #6d7971;
+      font-weight: 750;
+    }
+
+    .review-list {
+      text-align: left;
+      margin: 20px 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 9px;
+    }
+
+    .review-item {
+      background: #f8faf8;
+      border: 1px solid #e1e9e3;
+      border-radius: 12px;
+      padding: 11px 13px;
+    }
+
+    .review-expression {
+      font-weight: 900;
+      color: #326744;
+    }
+
+    .review-meaning {
+      color: #5e6b63;
+      font-size: 14px;
+      margin-left: 5px;
+    }
+
+    /* Start screen */
+    .start-list {
+      margin: 20px 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .start-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      background: #f6faf7;
+      border-radius: 12px;
+      color: #506057;
+      font-size: 14px;
+    }
+
+    .start-list span {
+      font-weight: 900;
+      color: #438159;
+    }
+
+    /* Utility */
+    .hidden {
+      display: none !important;
+    }
+
+    .error-message {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 13px;
+      border-radius: 10px;
+      background: #fdf1f1;
+      color: #9b5050;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .app {
+        padding: 15px 10px 35px;
+      }
+
+      .card {
+        border-radius: 18px;
+        padding: 20px 16px;
+      }
+
+      .flashcard {
+        height: 330px;
+      }
+
+      .button-row {
+        flex-direction: column;
+      }
+
+      .btn-secondary {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+  <div class="container">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="header-icon">♻️</div>
+      <h1>Starting a Recycling Project</h1>
+      <p>Read → Translate → Learn → Quiz</p>
+    </header>
+
+    <!-- PROGRESS -->
+    <div class="progress-card">
+      <div class="progress-top">
+        <span class="progress-label" id="progressLabel">
+          학습 시작
+        </span>
+        <span class="progress-percent" id="progressPercent">
+          0%
+        </span>
+      </div>
+
+      <div class="progress-track">
+        <div
+          class="progress-fill"
+          id="progressFill"
+          style="width: 0%;">
+        </div>
+      </div>
+    </div>
+
+    <!-- START SCREEN -->
+    <section class="card" id="startScreen">
+
+      <h2 class="section-title">
+        🌱 오늘의 학습
+      </h2>
+
+      <p class="section-description">
+        다음 글을 한 문장씩 해석하고, 핵심 표현을 공부한 뒤 퀴즈를 풀어 보세요.
+      </p>
+
+      <ul class="start-list">
+        <li>
+          <span>1</span>
+          5개의 영어 문장을 한 문장씩 해석합니다.
+        </li>
+
+        <li>
+          <span>2</span>
+          자신의 해석을 입력한 후 모범 해석을 확인합니다.
+        </li>
+
+        <li>
+          <span>3</span>
+          Target Expressions 6개를 ClassCard로 학습합니다.
+        </li>
+
+        <li>
+          <span>4</span>
+          마지막 표현 퀴즈에서 틀리면 다시 풀어야 합니다.
+        </li>
+      </ul>
+
+      <button
+        class="btn btn-primary"
+        id="startButton"
+        type="button">
+        학습 시작하기 →
+      </button>
+
+    </section>
+
+
+    <!-- TRANSLATION SECTION -->
+    <section class="card hidden" id="translationSection">
+
+      <h2 class="section-title">
+        📝 문장 해석하기
+      </h2>
+
+      <p class="section-description">
+        영어 문장을 읽고 자연스러운 한국어로 해석해 보세요.
+      </p>
+
+      <div class="sentence-number" id="sentenceNumber">
+        문장 1
+      </div>
+
+      <div class="sentence-box">
+        <p class="sentence-text" id="sentenceText"></p>
+      </div>
+
+      <p class="instruction">
+        💬 나의 해석을 적어 보세요.
+      </p>
+
+      <textarea
+        id="translationInput"
+        placeholder="여기에 한국어 해석을 입력하세요."
+        spellcheck="false"></textarea>
+
+      <div
+        class="error-message"
+        id="translationError">
+        해석을 먼저 입력해 주세요.
+      </div>
+
+      <div class="button-row">
+        <button
+          class="btn btn-primary"
+          id="checkAnswerButton"
+          type="button">
+          정답 확인
+        </button>
+      </div>
+
+      <!-- ANSWER -->
+      <div class="answer-box" id="answerBox">
+
+        <div class="answer-header">
+          ✅ 모범 해석
+        </div>
+
+        <div class="answer-content">
+
+          <p
+            class="answer-text"
+            id="modelAnswer">
+          </p>
+
+          <p
+            class="expression-note"
+            id="expressionNote">
+          </p>
+
+          <div class="next-row">
+            <button
+              class="btn btn-primary"
+              id="nextSentenceButton"
+              type="button">
+              다음 문장 →
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- CLASSCARD SECTION -->
+    <section class="card hidden" id="flashcardSection">
+
+      <h2 class="section-title">
+        🎴 Target Expressions
+      </h2>
+
+      <p class="section-description">
+        카드를 클릭해서 표현의 뜻과 예문을 확인하세요.
+      </p>
+
+      <div class="card-stage">
+
+        <div
+          class="flashcard"
+          id="flashcard">
+
+          <!-- FRONT -->
+          <div class="flashcard-face flashcard-front">
+
+            <div class="card-small-label">
+              TARGET EXPRESSION
+            </div>
+
+            <div
+              class="card-expression"
+              id="cardExpression">
+            </div>
+
+            <div class="tap-hint">
+              카드를 클릭하면 뜻을 볼 수 있어요.
+            </div>
+
+          </div>
+
+          <!-- BACK -->
+          <div class="flashcard-face flashcard-back">
+
+            <div class="card-small-label">
+              MEANING
+            </div>
+
+            <div
+              class="meaning"
+              id="cardMeaning">
+            </div>
+
+            <div class="example-box">
+
+              <div class="example-label">
+                Example
+              </div>
+
+              <div
+                class="example"
+                id="cardExample">
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card-controls">
+
+        <button
+          class="circle-btn"
+          id="prevCardButton"
+          type="button"
+          aria-label="이전 카드">
+          ←
+        </button>
+
+        <div
+          class="card-counter"
+          id="cardCounter">
+          1 / 6
+        </div>
+
+        <button
+          class="circle-btn"
+          id="nextCardButton"
+          type="button"
+          aria-label="다음 카드">
+          →
+        </button>
+
+      </div>
+
+      <div
+        class="button-row"
+        style="margin-top: 22px;">
+
+        <button
+          class="btn btn-primary"
+          id="startQuizButton"
+          type="button">
+          표현 퀴즈 시작 →
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- QUIZ SECTION -->
+    <section class="card hidden" id="quizSection">
+
+      <h2 class="section-title">
+        🧠 표현 퀴즈
+      </h2>
+
+      <p class="section-description">
+        영어 표현의 알맞은 뜻을 고르세요.
+      </p>
+
+      <div
+        class="sentence-number"
+        id="quizNumber">
+        문제 1 / 6
+      </div>
+
+      <div
+        class="quiz-expression"
+        id="quizExpression">
+      </div>
+
+      <p class="quiz-instruction">
+        알맞은 한국어 뜻을 선택하세요.
+      </p>
+
+      <div
+        class="choices"
+        id="choices">
+      </div>
+
+      <div
+        class="feedback"
+        id="feedback">
+      </div>
+
+      <div class="quiz-next" id="quizNextContainer">
+        <button
+          class="btn btn-primary"
+          id="nextQuizButton"
+          type="button">
+          다음 문제 →
+        </button>
+      </div>
+
+    </section>
+
+
+    <!-- COMPLETE SECTION -->
+    <section class="card hidden" id="completeSection">
+
+      <div class="complete">
+
+        <div class="complete-icon">
+          🎉
+        </div>
+
+        <h2>학습 완료!</h2>
+
+        <p>
+          Starting a Recycling Project의 핵심 표현 학습을 모두 마쳤습니다.
+        </p>
+
+        <div class="score-box">
+
+          <div
+            class="score-number"
+            id="finalScore">
+            6 / 6
+          </div>
+
+          <div class="score-label">
+            최종 퀴즈 점수
+          </div>
+
+        </div>
+
+        <h3 style="color:#356347; margin-bottom:8px;">
+          📚 Target Expressions 복습
+        </h3>
+
+        <ul
+          class="review-list"
+          id="reviewList">
+        </ul>
+
+        <button
+          class="btn btn-primary"
+          id="restartButton"
+          type="button">
+          처음부터 다시 하기
+        </button>
+
+      </div>
+
+    </section>
+
+  </div>
+</div>
+
+
+<script>
+  "use strict";
+
+  /* =========================================================
+     DATA
+     ========================================================= */
+
+  const sentences = [
+    {
+      text:
+        "A group of students wanted to find out how much waste their school produced each day.",
+
+      answer:
+        "한 무리의 학생들이 자신들의 학교가 매일 얼마나 많은 쓰레기를 배출하는지 알아내고 싶어 했다.",
+
+      note:
+        "<strong>find out</strong> = 알아내다, 알게 되다"
+    },
+
+    {
+      text:
+        "They decided to set up recycling boxes for paper and plastic.",
+
+      answer:
+        "그들은 종이와 플라스틱을 위한 재활용 상자를 설치하기로 결정했다.",
+
+      note:
+        "<strong>set up</strong> = 설치하다, 마련하다"
+    },
+
+    {
+      text:
+        "They also asked classmates to sort out their waste carefully.",
+
+      answer:
+        "그들은 또한 반 친구들에게 쓰레기를 주의해서 분류해 달라고 요청했다.",
+
+      note:
+        "<strong>sort out</strong> = 분류하다, 정리하다"
+    },
+
+    {
+      text:
+        "At first, many students did not pay attention to the recycling signs, so the team came up with a simple points game.",
+
+      answer:
+        "처음에는 많은 학생들이 재활용 표지판에 주의를 기울이지 않았기 때문에, 그 팀은 간단한 점수 게임을 생각해 냈다.",
+
+      note:
+        "<strong>pay attention to</strong> = ~에 주의를 기울이다<br>" +
+        "<strong>come up with</strong> = ~을 생각해 내다"
+    },
+
+    {
+      text:
+        "With more students joining the project, the team was able to carry out the plan for an entire month.",
+
+      answer:
+        "더 많은 학생들이 프로젝트에 참여하면서, 그 팀은 한 달 내내 그 계획을 실행할 수 있었다.",
+
+      note:
+        "<strong>carry out</strong> = ~을 실행하다, 수행하다"
+    }
+  ];
+
+
+  /*
+    Target Expressions는 사용자가 요청한 순서 그대로 유지합니다.
+  */
+
+  const expressions = [
+    {
+      expression: "find out",
+      meaning: "알아내다",
+      example:
+        "We need to find out what happened."
+    },
+
+    {
+      expression: "set up",
+      meaning: "설치하다 / 마련하다",
+      example:
+        "They set up recycling boxes at school."
+    },
+
+    {
+      expression: "pay attention to",
+      meaning: "~에 주의를 기울이다",
+      example:
+        "Please pay attention to the recycling signs."
+    },
+
+    {
+      expression: "sort out",
+      meaning: "분류하다 / 정리하다",
+      example:
+        "Students sort out paper and plastic."
+    },
+
+    {
+      expression: "come up with",
+      meaning: "~을 생각해 내다",
+      example:
+        "She came up with a great idea."
+    },
+
+    {
+      expression: "carry out",
+      meaning: "실행하다 / 수행하다",
+      example:
+        "The team carried out the plan."
+    }
+  ];
+
+
+  /* =========================================================
+     STATE
+     ========================================================= */
+
+  const STORAGE_KEY =
+    "recycling_project_learning_state_v1";
+
+  let currentSentence = 0;
+  let currentCard = 0;
+  let currentQuiz = 0;
+  let quizScore = 0;
+
+  /*
+    각 퀴즈 문제에서 이미 틀린 선택지를 저장합니다.
+    틀린 답을 눌렀을 때 해당 버튼만 비활성화하여
+    같은 문제를 다시 풀도록 합니다.
+  */
+  let wrongChoices = [];
+
+
+  /* =========================================================
+     DOM
+     ========================================================= */
+
+  const startScreen =
+    document.getElementById("startScreen");
+
+  const translationSection =
+    document.getElementById("translationSection");
+
+  const flashcardSection =
+    document.getElementById("flashcardSection");
+
+  const quizSection =
+    document.getElementById("quizSection");
+
+  const completeSection =
+    document.getElementById("completeSection");
+
+  const progressLabel =
+    document.getElementById("progressLabel");
+
+  const progressPercent =
+    document.getElementById("progressPercent");
+
+  const progressFill =
+    document.getElementById("progressFill");
+
+  const startButton =
+    document.getElementById("startButton");
+
+  const sentenceNumber =
+    document.getElementById("sentenceNumber");
+
+  const sentenceText =
+    document.getElementById("sentenceText");
+
+  const translationInput =
+    document.getElementById("translationInput");
+
+  const translationError =
+    document.getElementById("translationError");
+
+  const checkAnswerButton =
+    document.getElementById("checkAnswerButton");
+
+  const answerBox =
+    document.getElementById("answerBox");
+
+  const modelAnswer =
+    document.getElementById("modelAnswer");
+
+  const expressionNote =
+    document.getElementById("expressionNote");
+
+  const nextSentenceButton =
+    document.getElementById("nextSentenceButton");
+
+  const flashcard =
+    document.getElementById("flashcard");
+
+  const cardExpression =
+    document.getElementById("cardExpression");
+
+  const cardMeaning =
+    document.getElementById("cardMeaning");
+
+  const cardExample =
+    document.getElementById("cardExample");
+
+  const cardCounter =
+    document.getElementById("cardCounter");
+
+  const prevCardButton =
+    document.getElementById("prevCardButton");
+
+  const nextCardButton =
+    document.getElementById("nextCardButton");
+
+  const startQuizButton =
+    document.getElementById("startQuizButton");
+
+  const quizNumber =
+    document.getElementById("quizNumber");
+
+  const quizExpression =
+    document.getElementById("quizExpression");
+
+  const choices =
+    document.getElementById("choices");
+
+  const feedback =
+    document.getElementById("feedback");
+
+  const quizNextContainer =
+    document.getElementById("quizNextContainer");
+
+  const nextQuizButton =
+    document.getElementById("nextQuizButton");
+
+  const finalScore =
+    document.getElementById("finalScore");
+
+  const reviewList =
+    document.getElementById("reviewList");
+
+  const restartButton =
+    document.getElementById("restartButton");
+
+
+  /* =========================================================
+     UTILITY
+     ========================================================= */
+
+  function showOnly(section) {
+    const sections = [
+      startScreen,
+      translationSection,
+      flashcardSection,
+      quizSection,
+      completeSection
+    ];
+
+    sections.forEach(function(item) {
+      item.classList.add("hidden");
+    });
+
+    section.classList.remove("hidden");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  }
+
+
+  function updateProgress(label, percent) {
+    progressLabel.textContent = label;
+    progressPercent.textContent = percent + "%";
+    progressFill.style.width = percent + "%";
+  }
+
+
+  function saveState() {
+    const state = {
+      currentSentence: currentSentence,
+      currentCard: currentCard,
+      currentQuiz: currentQuiz,
+      quizScore: quizScore,
+      screen:
+        startScreen.classList.contains("hidden")
+          ? (
+              translationSection.classList.contains("hidden")
+                ? (
+                    flashcardSection.classList.contains("hidden")
+                      ? (
+                          quizSection.classList.contains("hidden")
+                            ? "complete"
+                            : "quiz"
+                        )
+                      : "flashcard"
+                  )
+                : "translation"
+            )
+          : "start"
+    };
+
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(state)
+      );
+    } catch (error) {
+      /*
+        localStorage가 차단된 환경에서도
+        학습 자체는 계속 가능하도록 합니다.
+      */
+    }
+  }
+
+
+  function loadState() {
+    try {
+      const saved =
+        localStorage.getItem(STORAGE_KEY);
+
+      if (!saved) {
+        return null;
+      }
+
+      return JSON.parse(saved);
+
+    } catch (error) {
+      return null;
+    }
+  }
+
+
+  function clearState() {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      /* ignore */
+    }
+  }
+
+
+  /* =========================================================
+     START / SENTENCE
+     ========================================================= */
+
+  function startLearning() {
+    currentSentence = 0;
+    currentCard = 0;
+    currentQuiz = 0;
+    quizScore = 0;
+
+    showSentence();
+  }
+
+
+  function showSentence() {
+    const item =
+      sentences[currentSentence];
+
+    sentenceNumber.textContent =
+      "문장 " + (currentSentence + 1);
+
+    sentenceText.textContent =
+      item.text;
+
+    translationInput.value = "";
+
+    translationError.classList.remove("show");
+
+    answerBox.classList.remove("show");
+
+    checkAnswerButton.disabled = false;
+
+    updateProgress(
+      "Sentence " +
+      (currentSentence + 1) +
+      " of " +
+      sentences.length,
+
+      Math.round(
+        (currentSentence / sentences.length) * 60
+      )
+    );
+
+    showOnly(translationSection);
+
+    setTimeout(function() {
+      translationInput.focus();
+    }, 350);
+
+    saveState();
+  }
+
+
+  function checkTranslation() {
+    const userAnswer =
+      translationInput.value.trim();
+
+    if (!userAnswer) {
+      translationError.classList.add("show");
+      translationInput.focus();
+      return;
+    }
+
+    translationError.classList.remove("show");
+
+    const item =
+      sentences[currentSentence];
+
+    modelAnswer.textContent =
+      item.answer;
+
+    expressionNote.innerHTML =
+      item.note;
+
+    answerBox.classList.add("show");
+
+    checkAnswerButton.disabled = true;
+
+    saveState();
+  }
+
+
+  function nextSentence() {
+    if (
+      !answerBox.classList.contains("show")
+    ) {
+      return;
+    }
+
+    if (
+      currentSentence <
+      sentences.length - 1
+    ) {
+      currentSentence++;
+      showSentence();
+    } else {
+      currentCard = 0;
+      showFlashcard();
+    }
+  }
+
+
+  /* =========================================================
+     FLASHCARD
+     ========================================================= */
+
+  function showFlashcard() {
+    const item =
+      expressions[currentCard];
+
+    cardExpression.textContent =
+      item.expression;
+
+    cardMeaning.textContent =
+      item.meaning;
+
+    cardExample.textContent =
+      item.example;
+
+    cardCounter.textContent =
+      (currentCard + 1) +
+      " / " +
+      expressions.length;
+
+    flashcard.classList.remove("flipped");
+
+    prevCardButton.disabled =
+      currentCard === 0;
+
+    nextCardButton.disabled =
+      currentCard === expressions.length - 1;
+
+    updateProgress(
+      "Target Expressions " +
+      (currentCard + 1) +
+      " of " +
+      expressions.length,
+
+      60 +
+      Math.round(
+        ((currentCard + 1) / expressions.length) * 20
+      )
+    );
+
+    showOnly(flashcardSection);
+
+    saveState();
+  }
+
+
+  function flipCard() {
+    flashcard.classList.toggle("flipped");
+  }
+
+
+  function previousCard() {
+    if (currentCard > 0) {
+      currentCard--;
+      showFlashcard();
+    }
+  }
+
+
+  function nextCard() {
+    if (
+      currentCard <
+      expressions.length - 1
+    ) {
+      currentCard++;
+      showFlashcard();
+    }
+  }
+
+
+  /* =========================================================
+     QUIZ
+     ========================================================= */
+
+  function shuffle(array) {
+    const copy = array.slice();
+
+    for (
+      let i = copy.length - 1;
+      i > 0;
+      i--
+    ) {
+      const j =
+        Math.floor(Math.random() * (i + 1));
+
+      const temp = copy[i];
+
+      copy[i] = copy[j];
+      copy[j] = temp;
+    }
+
+    return copy;
+  }
+
+
+  function makeQuizChoices(correctIndex) {
+    const correct =
+      expressions[correctIndex].meaning;
+
+    const incorrectMeanings =
+      expressions
+        .filter(function(item, index) {
+          return index !== correctIndex;
+        })
+        .map(function(item) {
+          return item.meaning;
+        });
+
+    const wrong =
+      shuffle(incorrectMeanings).slice(0, 3);
+
+    return shuffle([
+      {
+        text: correct,
+        correct: true
+      },
+      {
+        text: wrong[0],
+        correct: false
+      },
+      {
+        text: wrong[1],
+        correct: false
+      },
+      {
+        text: wrong[2],
+        correct: false
+      }
+    ]);
+  }
+
+
+  function startQuiz() {
+    currentQuiz = 0;
+    quizScore = 0;
+    wrongChoices = [];
+
+    showQuiz();
+  }
+
+
+  function showQuiz() {
+    const item =
+      expressions[currentQuiz];
+
+    quizExpression.textContent =
+      item.expression;
+
+    quizNumber.textContent =
+      "문제 " +
+      (currentQuiz + 1) +
+      " / " +
+      expressions.length;
+
+    choices.innerHTML = "";
+
+    feedback.className = "feedback";
+    feedback.textContent = "";
+
+    quizNextContainer.classList.remove("show");
+
+    wrongChoices = [];
+
+    const quizChoices =
+      makeQuizChoices(currentQuiz);
+
+    quizChoices.forEach(function(option, index) {
+
+      const button =
+        document.createElement("button");
+
+      button.type = "button";
+      button.className = "choice";
+
+      button.textContent =
+        option.text;
+
+      button.dataset.correct =
+        option.correct ? "true" : "false";
+
+      button.dataset.index =
+        String(index);
+
+      button.addEventListener(
+        "click",
+        function() {
+          handleQuizAnswer(
+            button,
+            option.correct
+          );
+        }
+      );
+
+      choices.appendChild(button);
+    });
+
+    updateProgress(
+      "Expression Quiz " +
+      (currentQuiz + 1) +
+      " of " +
+      expressions.length,
+
+      80 +
+      Math.round(
+        (currentQuiz / expressions.length) * 20
+      )
+    );
+
+    showOnly(quizSection);
+
+    saveState();
+  }
+
+
+  function handleQuizAnswer(
+    selectedButton,
+    isCorrect
+  ) {
+
+    if (isCorrect) {
+
+      selectedButton.classList.add(
+        "correct"
+      );
+
+      quizScore++;
+
+      const allButtons =
+        choices.querySelectorAll(".choice");
+
+      allButtons.forEach(function(button) {
+        button.disabled = true;
+
+        if (
+          button.dataset.correct === "true"
+        ) {
+          button.classList.add("correct");
+        }
+      });
+
+      feedback.textContent =
+        "🎉 정답입니다! 다음 문제로 넘어가세요.";
+
+      feedback.className =
+        "feedback show correct-feedback";
+
+      quizNextContainer.classList.add(
+        "show"
+      );
+
+      saveState();
+
+    } else {
+
+      selectedButton.classList.add(
+        "wrong"
+      );
+
+      selectedButton.disabled = true;
+
+      feedback.textContent =
+        "❌ 아쉽습니다. 다시 골라 보세요!";
+
+      feedback.className =
+        "feedback show wrong-feedback";
+
+      /*
+        정답 버튼은 계속 활성화되어 있고,
+        틀린 버튼만 비활성화됩니다.
+      */
+
+      saveState();
+    }
+  }
+
+
+  function nextQuiz() {
+
+    if (
+      currentQuiz <
+      expressions.length - 1
+    ) {
+      currentQuiz++;
+      showQuiz();
+
+    } else {
+      showComplete();
+    }
+  }
+
+
+  /* =========================================================
+     COMPLETE
+     ========================================================= */
+
+  function showComplete() {
+
+    finalScore.textContent =
+      quizScore +
+      " / " +
+      expressions.length;
+
+    reviewList.innerHTML = "";
+
+    expressions.forEach(function(item) {
+
+      const li =
+        document.createElement("li");
+
+      li.className =
+        "review-item";
+
+      const expression =
+        document.createElement("span");
+
+      expression.className =
+        "review-expression";
+
+      expression.textContent =
+        item.expression;
+
+      const meaning =
+        document.createElement("span");
+
+      meaning.className =
+        "review-meaning";
+
+      meaning.textContent =
+        "— " + item.meaning;
+
+      li.appendChild(expression);
+      li.appendChild(meaning);
+
+      reviewList.appendChild(li);
+    });
+
+    updateProgress(
+      "학습 완료",
+      100
+    );
+
+    showOnly(completeSection);
+
+    saveState();
+  }
+
+
+  /* =========================================================
+     RESTART
+     ========================================================= */
+
+  function restart() {
+    clearState();
+
+    currentSentence = 0;
+    currentCard = 0;
+    currentQuiz = 0;
+    quizScore = 0;
+    wrongChoices = [];
+
+    translationInput.value = "";
+
+    updateProgress(
+      "학습 시작",
+      0
+    );
+
+    showOnly(startScreen);
+  }
+
+
+  /* =========================================================
+     EVENT LISTENERS
+     ========================================================= */
+
+  startButton.addEventListener(
+    "click",
+    startLearning
+  );
+
+  checkAnswerButton.addEventListener(
+    "click",
+    checkTranslation
+  );
+
+  nextSentenceButton.addEventListener(
+    "click",
+    nextSentence
+  );
+
+  flashcard.addEventListener(
+    "click",
+    flipCard
+  );
+
+  prevCardButton.addEventListener(
+    "click",
+    previousCard
+  );
+
+  nextCardButton.addEventListener(
+    "click",
+    nextCard
+  );
+
+  startQuizButton.addEventListener(
+    "click",
+    startQuiz
+  );
+
+  nextQuizButton.addEventListener(
+    "click",
+    nextQuiz
+  );
+
+  restartButton.addEventListener(
+    "click",
+    restart
+  );
+
+
+  /*
+    Ctrl + Enter / Cmd + Enter로
+    번역 정답 확인 가능
+  */
+  translationInput.addEventListener(
+    "keydown",
+    function(event) {
+
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key === "Enter"
+      ) {
+        checkTranslation();
+      }
+
+    }
+  );
+
+
+  /* =========================================================
+     RESTORE SAVED PROGRESS
+     ========================================================= */
+
+  function restoreSavedProgress() {
+
+    const saved =
+      loadState();
+
+    if (!saved) {
+      showOnly(startScreen);
+      updateProgress(
+        "학습 시작",
+        0
+      );
+      return;
+    }
+
+    currentSentence =
+      Number.isInteger(saved.currentSentence)
+        ? saved.currentSentence
+        : 0;
+
+    currentCard =
+      Number.isInteger(saved.currentCard)
+        ? saved.currentCard
+        : 0;
+
+    currentQuiz =
+      Number.isInteger(saved.currentQuiz)
+        ? saved.currentQuiz
+        : 0;
+
+    quizScore =
+      Number.isInteger(saved.quizScore)
+        ? saved.quizScore
+        : 0;
+
+    /*
+      새로고침 후에는
+      진행 중인 학습의 현재 단계로 돌아갑니다.
+      번역 입력 내용 자체는 저장하지 않습니다.
+    */
+
+    if (saved.screen === "translation") {
+      showSentence();
+
+    } else if (
+      saved.screen === "flashcard"
+    ) {
+      if (
+        currentCard >= expressions.length
+      ) {
+        currentCard = 0;
+      }
+
+      showFlashcard();
+
+    } else if (
+      saved.screen === "quiz"
+    ) {
+      if (
+        currentQuiz >= expressions.length
+      ) {
+        currentQuiz = 0;
+      }
+
+      showQuiz();
+
+    } else if (
+      saved.screen === "complete"
+    ) {
+      showComplete();
+
+    } else {
+      showOnly(startScreen);
+
+      updateProgress(
+        "학습 시작",
+        0
+      );
+    }
+  }
+
+
+  /* =========================================================
+     INITIALIZE
+     ========================================================= */
+
+  restoreSavedProgress();
+
+</script>
+
+</body>
+  </html>
