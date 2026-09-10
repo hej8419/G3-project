@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recycling Project: Expression Explorer</title>
+<style>
+  :root {
+    --green: #2f9e44;
+    --green-dark: #1f7a35;
+    --green-light: #ebfbee;
+    --red: #e03131;
+    --red-light: #fff0f0;
+    --blue: #1971c2;
+    --blue-light: #eaf3fc;
+    --purple: #7048e8;
+    --ink: #22303a;
+    --muted: #6b7c85;
+    --card: #ffffff;
+    --bg: #f4f8f5;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', 'Noto Sans KR', Arial, sans-serif;
+    background: linear-gradient(160deg, #eafcef 0%, #f4f8f5 40%, #eef6ff 100%);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+  }
+  #app {
+    width: 100%;
+    max-width: 780px;
+    background: var(--card);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(30, 80, 50, 0.12);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 640px;
+  }
+  header {
+    background: linear-gradient(135deg, var(--green), #40b95a);
+    color: white;
+    padding: 18px 22px 14px;
+  }
+  header h1 { margin: 0 0 4px; font-size: 1.25rem; }
+  header p.sub { margin: 0; font-size: 0.85rem; opacity: 0.92; }
+  .home-btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .home-btn {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.5);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .home-btn:hover { background: rgba(255,255,255,0.35); }
+  .home-btn.active { background: white; color: var(--green-dark); }
+  .progress-track { display: flex; gap: 6px; margin-top: 14px; }
+  .progress-seg { flex: 1; height: 6px; border-radius: 4px; background: rgba(255,255,255,0.35); overflow: hidden; }
+  .progress-seg.done, .progress-seg.active { background: white; }
+  .stage-label { font-size: 0.72rem; margin-top: 6px; opacity: 0.9; }
+  main { padding: 22px; flex: 1; display: flex; flex-direction: column; }
+  .stage { display: none; flex: 1; flex-direction: column; }
+  .stage.visible { display: flex; }
+  h2 { font-size: 1.1rem; margin: 0 0 10px; color: var(--green-dark); }
+  .instructions {
+    background: #f1f8f2;
+    border-left: 4px solid var(--green);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .instructions .kr { color: var(--muted); font-size: 0.82rem; display: block; margin-top: 2px; }
+  .passage {
+    background: var(--green-light);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    line-height: 1.9;
+    font-size: 1rem;
+    margin-bottom: 18px;
+  }
+  .expr { font-weight: 700; color: var(--green-dark); background: #d3f9d8; padding: 1px 5px; border-radius: 6px; }
+  .meaning-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 520px) { .meaning-grid { grid-template-columns: 1fr; } }
+  .meaning-card { background: #fff; border: 1.5px solid #dceee0; border-radius: 10px; padding: 10px 12px; }
+  .meaning-card .phrase { font-weight: 700; color: var(--green-dark); font-size: 0.95rem; }
+  .meaning-card .def { font-size: 0.83rem; color: var(--ink); margin-top: 3px; }
+  .meaning-card .kr { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+
+  .match-wrap { display: flex; gap: 14px; flex: 1; }
+  .match-col { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .match-btn {
+    text-align: left; padding: 12px 14px; border-radius: 10px; border: 2px solid #d7e8db;
+    background: white; cursor: pointer; font-size: 0.88rem; transition: all 0.15s ease; line-height: 1.4;
+  }
+  .match-btn:hover:not(.matched):not(:disabled) { border-color: var(--green); }
+  .match-btn.selected { border-color: var(--blue); background: #eaf3fc; }
+  .match-btn.matched { background: var(--green-light); border-color: var(--green); color: var(--green-dark); cursor: default; opacity: 0.85; }
+  .match-btn.wrong-flash { animation: shake 0.35s; border-color: var(--red); background: var(--red-light); }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+  .fill-passage { background: var(--green-light); border-radius: var(--radius); padding: 16px 18px; line-height: 2.4; font-size: 1rem; margin-bottom: 16px; }
+  .blank {
+    display: inline-block; min-width: 100px; padding: 3px 10px; margin: 0 2px; border-bottom: 2px solid var(--blue);
+    background: #fff; border-radius: 6px 6px 0 0; cursor: pointer; font-weight: 600; color: var(--blue); text-align: center;
+  }
+  .blank.empty::after { content: '?????'; color: #c3d3c8; letter-spacing: 2px; }
+  .blank.correct { border-color: var(--green); background: var(--green-light); color: var(--green-dark); }
+  .blank.incorrect { border-color: var(--red); background: var(--red-light); color: var(--red); }
+  .blank .fix { display: block; font-size: 0.72rem; font-weight: 400; color: var(--green-dark); }
+  .word-bank { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; background: #f6f6f6; border-radius: 10px; min-height: 50px; }
+  .bank-word {
+    padding: 8px 14px; border-radius: 20px; border: 2px solid #cfd8dc; background: white; cursor: pointer;
+    font-size: 0.88rem; font-weight: 600; color: var(--ink); transition: all 0.15s ease;
+  }
+  .bank-word:hover:not(:disabled) { border-color: var(--blue); }
+  .bank-word.selected { background: var(--blue); color: white; border-color: var(--blue); }
+  .bank-word:disabled { opacity: 0.25; cursor: default; }
+
+  .mc-question { background: #fbfbfb; border: 1.5px solid #e4e9e6; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+  .mc-question .qnum { font-size: 0.75rem; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+  .mc-question .sentence { font-size: 0.96rem; margin-bottom: 10px; line-height: 1.5; }
+  .mc-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 480px) { .mc-options { grid-template-columns: 1fr; } }
+  .mc-opt { padding: 9px 10px; border-radius: 8px; border: 1.5px solid #d7e0dc; background: white; cursor: pointer; font-size: 0.86rem; text-align: left; }
+  .mc-opt:hover:not(:disabled) { border-color: var(--blue); }
+  .mc-opt.chosen { border-color: var(--blue); background: #eaf3fc; }
+  .mc-opt.correct-answer { border-color: var(--green); background: var(--green-light); color: var(--green-dark); font-weight: 700; }
+  .mc-opt.wrong-chosen { border-color: var(--red); background: var(--red-light); color: var(--red); font-weight: 700; }
+  .mc-opt:disabled { cursor: default; }
+
+  .btn-row { margin-top: auto; padding-top: 18px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+  .btn { padding: 11px 22px; border-radius: 24px; border: none; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: transform 0.1s ease; }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: var(--green); color: white; }
+  .btn-primary:disabled { background: #c9d8cc; cursor: not-allowed; }
+  .btn-secondary { background: #eef2ef; color: var(--ink); }
+  .btn-purple { background: var(--purple); color: white; }
+  .btn-blue { background: var(--blue); color: white; }
+  .hint-msg { font-size: 0.82rem; color: var(--muted); align-self: center; margin-right: auto; }
+
+  .result-hero { text-align: center; padding: 10px 0 20px; }
+  .result-hero .score-circle {
+    width: 130px; height: 130px; border-radius: 50%;
+    background: conic-gradient(var(--green) var(--pct, 0%), #e6efe8 0);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
+  }
+  .score-circle-inner { width: 104px; height: 104px; border-radius: 50%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .score-circle-inner .num { font-size: 1.6rem; font-weight: 800; color: var(--green-dark); }
+  .score-circle-inner .lbl { font-size: 0.7rem; color: var(--muted); }
+  .result-msg { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
+  .recap-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .recap-item { display: flex; justify-content: space-between; background: #f6f9f6; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; }
+  .recap-item b { color: var(--green-dark); }
+
+  /* ---------- FLASHCARDS ---------- */
+  .fc-topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .fc-counter { font-size:0.85rem; color:var(--muted); font-weight:600; }
+  .fc-scene { perspective: 1200px; margin-bottom: 16px; flex:1; display:flex; align-items:center; justify-content:center; }
+  .fc-card {
+    width: 100%; max-width: 500px; min-height: 300px; position: relative;
+    transform-style: preserve-3d; transition: transform 0.5s; cursor: pointer;
+  }
+  .fc-card.flipped { transform: rotateY(180deg); }
+  .fc-face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    border-radius: 16px; padding: 22px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08); border: 2px solid #d7e8db;
+  }
+  .fc-face.front { background: linear-gradient(160deg,#ffffff,#eefaf0); }
+  .fc-face.back { background: linear-gradient(160deg,#eef5ff,#ffffff); transform: rotateY(180deg); }
+  .fc-phrase { font-size: 1.6rem; font-weight: 800; color: var(--green-dark); margin-bottom: 6px; }
+  .fc-phonetic { font-size: 1rem; color: var(--purple); font-family: 'Segoe UI', monospace; margin-bottom: 10px; }
+  .fc-hint { font-size: 0.78rem; color: var(--muted); margin-top: 14px; }
+  .fc-def { font-size: 0.95rem; font-weight:700; color: var(--blue); margin-bottom:10px; }
+  .fc-examples { font-size: 0.85rem; line-height:1.6; color: var(--ink); text-align:left; }
+  .fc-examples div { margin-bottom:6px; }
+  .fc-examples b { color: var(--green-dark); }
+
+  .fc-controls { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:14px; }
+  .fc-audio-btn {
+    background: var(--blue); color:white; border:none; border-radius:20px; padding:9px 16px;
+    font-size:0.82rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px;
+  }
+  .fc-audio-btn:hover { background:#155a9c; }
+  .speed-select {
+    padding: 8px 10px; border-radius: 20px; border: 1.5px solid #cfd8dc; font-size:0.8rem; font-weight:600; background:white;
+  }
+
+  .pron-box {
+    background:#f7f5ff; border:1.5px solid #ddd4fb; border-radius:12px; padding:14px; margin-bottom:14px;
+  }
+  .pron-box h3 { margin:0 0 8px; font-size:0.9rem; color: var(--purple); }
+  .mic-btn {
+    background: var(--purple); color:white; border:none; border-radius:20px; padding:9px 18px;
+    font-size:0.85rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+  }
+  .mic-btn.recording { background: var(--red); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
+  .pron-result { margin-top:10px; font-size:0.85rem; }
+  .pron-score { font-weight:800; font-size:1.1rem; }
+  .pron-score.good { color: var(--green-dark); }
+  .pron-score.mid { color:#e8850c; }
+  .pron-score.low { color: var(--red); }
+  .pron-heard { color:var(--muted); font-size:0.8rem; margin-top:4px; }
+
+  .fc-nav { display:flex; justify-content:space-between; gap:10px; margin-top:auto; padding-top:12px; }
+
+  /* ---------- ASSESSMENT HUB ---------- */
+  .assess-menu { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:520px){ .assess-menu{ grid-template-columns:1fr; } }
+  .assess-card {
+    background:white; border:2px solid #dceee0; border-radius:14px; padding:16px; cursor:pointer; text-align:left;
+    transition: all 0.15s ease;
+  }
+  .assess-card:hover { border-color: var(--green); transform: translateY(-2px); }
+  .assess-card .ic { font-size:1.6rem; margin-bottom:6px; }
+  .assess-card .ttl { font-weight:800; color:var(--green-dark); font-size:0.95rem; margin-bottom:3px; }
+  .assess-card .desc { font-size:0.78rem; color:var(--muted); }
+
+  .spell-item { background:#fbfbfb; border:1.5px solid #e4e9e6; border-radius:12px; padding:14px 16px; margin-bottom:14px; }
+  .spell-item .prompt { font-size:0.95rem; margin-bottom:8px; }
+  .spell-item .prompt b { color: var(--green-dark); }
+  .spell-input {
+    width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid #cfd8dc; font-size:0.9rem;
+  }
+  .spell-input.correct { border-color: var(--green); background: var(--green-light); }
+  .spell-input.incorrect { border-color: var(--red); background: var(--red-light); }
+  .spell-feedback { margin-top:6px; font-size:0.83rem; font-weight:700; }
+  .spell-feedback.correct { color: var(--green-dark); }
+  .spell-feedback.incorrect { color: var(--red); }
+
+  /* ---------- IMAGE GAME ---------- */
+  .img-scene-wrap { position:relative; width:100%; border-radius:14px; overflow:hidden; margin-bottom:14px; background:#eef6ff; }
+  .img-scene { width:100%; height:auto; display:block; }
+  .img-hotspot {
+    position:absolute; border:3px solid transparent; border-radius:10px; cursor:pointer;
+    transition: all 0.15s ease;
+  }
+  .img-hotspot:hover { border-color: rgba(25,113,194,0.5); }
+  .img-hotspot.correct { border-color: var(--green); background: rgba(47,158,68,0.25); }
+  .img-hotspot.incorrect { border-color: var(--red); background: rgba(224,49,49,0.25); }
+  .img-game-audio-row { display:flex; justify-content:center; margin-bottom:12px; }
+
+  .retake-banner {
+    background:#fff4e6; border:1.5px solid #ffd8a8; color:#a15c00; padding:10px 14px;
+    border-radius:10px; font-size:0.85rem; margin-bottom:14px; font-weight:600;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🌱 Recycling Project: Expression Explorer</h1>
+    <p class="sub">Learn 6 useful English expressions · about 10–15 minutes</p>
+    <div class="home-btn-row">
+      <button class="home-btn active" id="navMain" onclick="goHome('main')">📘 Main Activity</button>
+      <button class="home-btn" id="navFlash" onclick="goHome('flash')">🃏 Flashcards</button>
+      <button class="home-btn" id="navAssess" onclick="goHome('assess')">🧪 Assessment</button>
+      <button class="home-btn" id="navImg" onclick="goHome('imggame')">🖼️ Picture Game</button>
+    </div>
+    <div class="progress-track" id="progressTrack"></div>
+    <div class="stage-label" id="stageLabel">Step 1 of 5: Learn</div>
+  </header>
+
+  <main>
+
+    <!-- STAGE 1: LEARN -->
+    <section class="stage visible" id="stage-learn">
+      <h2>📖 Step 1. Read the story</h2>
+      <div class="instructions">
+        Read the passage below. The six target expressions are highlighted. Then check their meanings.
+        <span class="kr">아래 글을 읽어보세요. 6개의 표현이 강조되어 있습니다. 그 다음 의미를 확인하세요.</span>
+      </div>
+      <div class="passage">
+        A group of students wanted to <span class="expr">find out</span> how much waste their school produced each day. They decided to <span class="expr">set up</span> recycling boxes for paper and plastic. They also asked classmates to <span class="expr">sort out</span> their waste carefully. At first, many students did not <span class="expr">pay attention to</span> the recycling signs, so the team <span class="expr">came up with</span> a simple points game. With more students joining the project, the team was able to <span class="expr">carry out</span> the plan for an entire month.
+      </div>
+      <div class="meaning-grid" id="meaningGrid"></div>
+      <div class="btn-row">
+        <button class="btn btn-purple" onclick="goHome('flash')">🃏 Study Flashcards First</button>
+        <button class="btn btn-primary" onclick="goToStage(1)">Next: Matching Game →</button>
+      </div>
+    </section>
+
+    <!-- STAGE 2: MATCH -->
+    <section class="stage" id="stage-match">
+      <h2>🔗 Step 2. Match the expression to its meaning</h2>
+      <div class="instructions">
+        Tap an expression, then tap its correct meaning. Matched pairs turn green.
+        <span class="kr">표현을 먼저 누르고, 알맞은 뜻을 누르세요. 맞으면 초록색이 됩니다.</span>
+      </div>
+      <div class="match-wrap">
+        <div class="match-col" id="matchLeftCol"></div>
+        <div class="match-col" id="matchRightCol"></div>
+      </div>
+      <div class="btn-row">
+        <span class="hint-msg" id="matchHint">Matched: 0 / 6</span>
+        <button class="btn btn-primary" id="matchNextBtn" onclick="goToStage(2)" disabled>Next: Fill in the Blanks →</button>
+      </div>
+    </section>
+
+    <!-- STAGE 3: FILL -->
+    <section class="stage" id="stage-fill">
+      <h2>✏️ Step 3. Fill in the blanks</h2>
+      <div class="instructions">
+        Tap a word from the word bank, then tap a blank in the story to place it. Tap a filled blank to undo.
+        <span class="kr">단어 은행에서 단어를 누른 다음, 이야기의 빈칸을 눌러 채우세요.</span>
+      </div>
+      <div class="fill-passage" id="fillPassage"></div>
+      <div class="word-bank" id="wordBank"></div>
+      <div class="btn-row">
+        <span class="hint-msg" id="fillHint"></span>
+        <button class="btn btn-primary" id="checkFillBtn" onclick="checkFill()" disabled>Check Answers</button>
+        <button class="btn btn-primary" id="fillNextBtn" style="display:none" onclick="goToStage(3)">Next: Apply →</button>
+      </div>
+    </section>
+
+    <!-- STAGE 4: APPLY -->
+    <section class="stage" id="stage-apply">
+      <h2>🎯 Step 4. Use the expressions in new sentences</h2>
+      <div class="instructions">
+        Choose the best expression to complete each new sentence.
+        <span class="kr">각 새로운 문장에 가장 알맞은 표현을 고르세요.</span>
+      </div>
+      <div id="mcContainer"></div>
+      <div class="btn-row">
+        <span class="hint-msg" id="mcHint"></span>
+        <button class="btn btn-primary" id="submitMcBtn" onclick="checkMc()" disabled>Submit Answers</button>
+        <button class="btn btn-primary" id="mcNextBtn" style="display:none" onclick="goToStage(4)">See My Results →</button>
+      </div>
+    </section>
+
+    <!-- STAGE 5: RESULT -->
+    <section class="stage" id="stage-result">
+      <h2>🏁 Great job!</h2>
+      <div class="result-hero">
+        <div class="score-circle" id="scoreCircle">
+          <div class="score-circle-inner">
+            <div class="num" id="scoreNum">0/12</div>
+            <div class="lbl">SCORE</div>
+          </div>
+        </div>
+        <div class="result-msg" id="resultMsg"></div>
+        <div style="font-size:0.85rem;color:var(--muted)" id="resultSub"></div>
+      </div>
+      <h2 style="font-size:1rem;">Quick recap</h2>
+      <div class="recap-list" id="recapList"></div>
+      <div class="btn-row">
+        <button class="btn btn-purple" onclick="goHome('flash')">🃏 Review Flashcards</button>
+        <button class="btn btn-blue" onclick="goHome('assess')">🧪 Try Assessment</button>
+        <button class="btn btn-secondary" onclick="location.reload()">🔄 Try Again</button>
+      </div>
+    </section>
+
+    <!-- FLASHCARDS SECTION -->
+    <section class="stage" id="stage-flash">
+      <h2>🃏 Flashcards</h2>
+      <div class="instructions">
+        Tap the card to flip it. Use the buttons to hear pronunciation and try recording your own voice.
+        <span class="kr">카드를 눌러 뒤집으세요. 버튼으로 발음을 듣고 직접 녹음해 보세요.</span>
+      </div>
+      <div class="fc-topbar">
+        <span class="fc-counter" id="fcCounter">Card 1 / 6</span>
+        <span class="fc-counter">Tap card to flip 👆</span>
+      </div>
+      <div class="fc-scene">
+        <div class="fc-card" id="fcCard" onclick="flipCard()">
+          <div class="fc-face front">
+            <div class="fc-phrase" id="fcPhraseFront"></div>
+            <div class="fc-hint">Tap to see meaning & examples</div>
+          </div>
+          <div class="fc-face back">
+            <div class="fc-phrase" id="fcPhraseBack" style="font-size:1.2rem;"></div>
+            <div class="fc-phonetic" id="fcPhonetic"></div>
+            <div class="fc-def" id="fcDef"></div>
+            <div class="fc-examples" id="fcExamples"></div>
+          </div>
+        </div>
+      </div>
+      <div class="fc-controls">
+        <button class="fc-audio-btn" onclick="event.stopPropagation(); playCardAudio()">🔊 Listen to Pronunciation</button>
+        <select class="speed-select" id="speedSelect" onclick="event.stopPropagation()">
+          <option value="0.6">0.6x</option>
+          <option value="0.8">0.8x</option>
+          <option value="1.0" selected>1.0x (default)</option>
+          <option value="1.2">1.2x</option>
+          <option value="1.5">1.5x</option>
+        </select>
+      </div>
+      <div class="pron-box" onclick="event.stopPropagation()">
+        <h3>🎙️ Pronunciation Practice</h3>
+        <button class="mic-btn" id="micBtn" onclick="event.stopPropagation(); toggleRecording()">🎤 Start Recording</button>
+        <div class="pron-result" id="pronResult"></div>
+      </div>
+      <div class="fc-nav">
+        <button class="btn btn-secondary" onclick="prevCard()">← Previous</button>
+        <button class="btn btn-primary" onclick="nextCard()">Next →</button>
+      </div>
+    </section>
+
+    <!-- ASSESSMENT HUB -->
+    <section class="stage" id="stage-assess-menu">
+      <h2>🧪 Assessment Center</h2>
+      <div class="instructions">
+        Choose an assessment type. Any word you get wrong will come back at the end for a retake round.
+        <span class="kr">평가 유형을 선택하세요. 틀린 단어는 마지막에 다시 나옵니다.</span>
+      </div>
+      <div class="assess-menu">
+        <div class="assess-card" onclick="startAssessment('spelling')">
+          <div class="ic">✍️</div>
+          <div class="ttl">Spelling Assessment</div>
+          <div class="desc">See the meaning, type the correct English expression.</div>
+        </div>
+        <div class="assess-card" onclick="startAssessment('word')">
+          <div class="ic">🔤</div>
+          <div class="ttl">Word Selection</div>
+          <div class="desc">See the meaning, choose the correct word from options.</div>
+        </div>
+        <div class="assess-card" onclick="startAssessment('meaning')">
+          <div class="ic">💡</div>
+          <div class="ttl">Meaning Selection</div>
+          <div class="desc">See the expression, choose the correct meaning.</div>
+        </div>
+        <div class="assess-card" onclick="startAssessment('mixed')">
+          <div class="ic">🎲</div>
+          <div class="ttl">Mixed Review</div>
+          <div class="desc">A random mix of all three question types.</div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="goHome('main')">← Back to Main Activity</button>
+      </div>
+    </section>
+
+    <!-- ASSESSMENT RUN -->
+    <section class="stage" id="stage-assess-run">
+      <h2 id="assessTitle">🧪 Assessment</h2>
+      <div id="retakeBannerWrap"></div>
+      <div class="instructions" id="assessInstructions"></div>
+      <div id="assessContainer"></div>
+      <div class="btn-row">
+        <span class="hint-msg" id="assessHint"></span>
+        <button class="btn btn-primary" id="assessSubmitBtn" onclick="submitAssessmentRound()">Check Answers</button>
+      </div>
+    </section>
+
+    <!-- ASSESSMENT DONE -->
+    <section class="stage" id="stage-assess-done">
+      <h2>✅ Assessment Complete!</h2>
+      <div class="result-hero">
+        <div class="score-circle" id="assessScoreCircle">
+          <div class="score-circle-inner">
+            <div class="num" id="assessScoreNum">6/6</div>
+            <div class="lbl">FINAL</div>
+          </div>
+        </div>
+        <div class="result-msg">🎉 All words correct!</div>
+        <div style="font-size:0.85rem;color:var(--muted)">You resolved every incorrect answer through retakes.</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="goHome('assess')">← Assessment Menu</button>
+        <button class="btn btn-primary" onclick="goHome('main')">Main Activity</button>
+      </div>
+    </section>
+
+    <!-- IMAGE GAME -->
+    <section class="stage" id="stage-imggame">
+      <h2>🖼️ Listen & Find the Picture</h2>
+      <div class="instructions">
+        Press "Play Word" to hear an expression, then click the matching picture in the scene.
+        <span class="kr">"단어 듣기"를 눌러 표현을 듣고, 장면에서 알맞은 그림을 클릭하세요.</span>
+      </div>
+      <div class="img-game-audio-row">
+        <button class="fc-audio-btn" onclick="playImgWord()">🔊 Play Word (<span id="imgWordCount">1</span>/6)</button>
+      </div>
+      <div class="img-scene-wrap">
+        <svg class="img-scene" id="imgScene" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="btn-row">
+        <span class="hint-msg" id="imgGameHint">Score: 0 / 6</span>
+        <button class="btn btn-secondary" onclick="goHome('main')">← Back to Main Activity</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* ================== DATA ================== */
+const expressions = [
+  {key:'find_out', phrase:'find out', phonetic:'/faɪnd aʊt/', def:'to get information that you did not know before', kr:'알아내다',
+    examples:["I want to find out what time the movie starts.", "The team tried to find out why the machine stopped working."]},
+  {key:'set_up', phrase:'set up', phonetic:'/sɛt ʌp/', def:'to prepare and start something, like a system or business', kr:'설치하다, 설립하다',
+    examples:["They plan to set up a new computer lab at school.", "We set up a tent before it got dark."]},
+  {key:'sort_out', phrase:'sort out', phonetic:'/sɔːrt aʊt/', def:'to organize or separate things correctly', kr:'분류하다, 정리하다',
+    examples:["Can you help me sort out these old books?", "She sorted out the laundry into two piles."]},
+  {key:'pay_attention', phrase:'pay attention to', phonetic:'/peɪ əˈtɛnʃən tuː/', def:'to watch, listen to, or think about something carefully', kr:'주의를 기울이다',
+    examples:["Please pay attention to the teacher during class.", "He didn't pay attention to the warning sign."]},
+  {key:'come_up_with', phrase:'come up with', phonetic:'/kʌm ʌp wɪð/', def:'to think of a new idea or plan', kr:'생각해 내다',
+    examples:["She came up with a great idea for the project.", "We need to come up with a plan before Friday."]},
+  {key:'carry_out', phrase:'carry out', phonetic:'/ˈkæri aʊt/', def:'to do or complete a plan or task', kr:'수행하다, 실행하다',
+    examples:["The team carried out the experiment successfully.", "They will carry out the survey next week."]}
+];
+
+const fillBlanks = [
+  {key:'find_out', text:'find out'},
+  {key:'set_up', text:'set up'},
+  {key:'sort_out', text:'sort out'},
+  {key:'pay_attention', text:'pay attention to'},
+  {key:'come_up_with', text:'came up with'},
+  {key:'carry_out', text:'carry out'}
+];
+
+const mcQuestions = [
+  {sentence:"Scientists are trying to ___ why the ice caps are melting so fast.", correct:'find_out', options:['find out','carry out','sort out','set up']},
+  {sentence:"My mom asked me to ___ my messy room before dinner.", correct:'sort_out', options:['sort out','pay attention to','come up with','find out']},
+  {sentence:"The company plans to ___ a new online store next month.", correct:'set_up', options:['set up','carry out','find out','sort out']},
+  {sentence:"Please ___ the teacher while she explains the homework.", correct:'pay_attention', options:['pay attention to','come up with','set up','sort out']},
+  {sentence:"The students had to ___ a creative idea for the school festival.", correct:'come_up_with', options:['come up with','carry out','find out','pay attention to']},
+  {sentence:"The scientists will ___ the experiment tomorrow morning.", correct:'carry_out', options:['carry out','set up','sort out','come up with']}
+];
+
+const stageIds = ['stage-learn','stage-match','stage-fill','stage-apply','stage-result'];
+const stageNames = ['Learn','Matching Game','Fill in the Blanks','Apply','Results'];
+let currentStage = 0;
+let fillScore = 0, mcScore = 0;
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function phraseTextForKey(key){ return expressions.find(e=>e.key===key).phrase; }
+function defTextForKey(key){ return expressions.find(e=>e.key===key).def; }
+
+/* ================== TOP NAV / SECTION SWITCHING ================== */
+const allSections = ['stage-learn','stage-match','stage-fill','stage-apply','stage-result',
+  'stage-flash','stage-assess-menu','stage-assess-run','stage-assess-done','stage-imggame'];
+
+function hideAllSections() {
+  allSections.forEach(id => document.getElementById(id).classList.remove('visible'));
+}
+
+function setNavActive(which) {
+  ['navMain','navFlash','navAssess','navImg'].forEach(id => document.getElementById(id).classList.remove('active'));
+  const map = {main:'navMain', flash:'navFlash', assess:'navAssess', imggame:'navImg'};
+  document.getElementById(map[which]).classList.add('active');
+}
+
+function goHome(section) {
+  hideAllSections();
+  setNavActive(section);
+  const progressTrack = document.getElementById('progressTrack');
+  const stageLabel = document.getElementById('stageLabel');
+  if (section === 'main') {
+    document.getElementById(stageIds[currentStage]).classList.add('visible');
+    progressTrack.style.display = 'flex';
+    stageLabel.style.display = 'block';
+    updateProgress();
+  } else if (section === 'flash') {
+    document.getElementById('stage-flash').classList.add('visible');
+    progressTrack.style.display = 'none';
+    stageLabel.textContent = 'Flashcards';
+    stageLabel.style.display = 'block';
+    renderFlashcard();
+  } else if (section === 'assess') {
+    document.getElementById('stage-assess-menu').classList.add('visible');
+    progressTrack.style.display = 'none';
+    stageLabel.textContent = 'Assessment Center';
+  } else if (section === 'imggame') {
+    document.getElementById('stage-imggame').classList.add('visible');
+    progressTrack.style.display = 'none';
+    stageLabel.textContent = 'Listen & Find Game';
+    initImgGame();
+  }
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function buildProgress() {
+  const track = document.getElementById('progressTrack');
+  track.innerHTML = '';
+  stageIds.forEach(() => {
+    const seg = document.createElement('div');
+    seg.className = 'progress-seg';
+    track.appendChild(seg);
+  });
+  updateProgress();
+}
+
+function updateProgress() {
+  const segs = document.querySelectorAll('.progress-seg');
+  segs.forEach((seg, i) => {
+    seg.classList.remove('done','active');
+    if (i < currentStage) seg.classList.add('done');
+    else if (i === currentStage) seg.classList.add('active');
+  });
+  document.getElementById('stageLabel').textContent = `Step ${currentStage+1} of 5: ${stageNames[currentStage]}`;
+}
+
+function goToStage(index) {
+  hideAllSections();
+  setNavActive('main');
+  currentStage = index;
+  document.getElementById(stageIds[currentStage]).classList.add('visible');
+  document.getElementById('progressTrack').style.display = 'flex';
+  document.getElementById('stageLabel').style.display = 'block';
+  updateProgress();
+  window.scrollTo({top:0, behavior:'smooth'});
+  if (stageIds[currentStage] === 'stage-result') showResult();
+}
+
+/* ================== STAGE 1: LEARN ================== */
+function renderMeanings() {
+  const grid = document.getElementById('meaningGrid');
+  grid.innerHTML = expressions.map(e => `
+    <div class="meaning-card">
+      <div class="phrase">${e.phrase}</div>
+      <div class="def">${e.def}</div>
+      <div class="kr">${e.kr}</div>
+    </div>
+  `).join('');
+}
+
+/* ================== STAGE 2: MATCH ================== */
+let matchSelectedLeft = null, matchSelectedRight = null, matchesDone = 0;
+
+function renderMatch() {
+  const leftCol = document.getElementById('matchLeftCol');
+  const rightCol = document.getElementById('matchRightCol');
+  leftCol.innerHTML = '';
+  rightCol.innerHTML = '';
+
+  expressions.forEach(e => {
+    const btn = document.createElement('button');
+    btn.className = 'match-btn';
+    btn.textContent = e.phrase;
+    btn.dataset.key = e.key;
+    btn.onclick = () => handleMatchClick(btn, 'left');
+    leftCol.appendChild(btn);
+  });
+
+  shuffle(expressions).forEach(e => {
+    const btn = document.createElement('button');
+    btn.className = 'match-btn';
+    btn.textContent = e.def;
+    btn.dataset.key = e.key;
+    btn.onclick = () => handleMatchClick(btn, 'right');
+    rightCol.appendChild(btn);
+  });
+}
+
+function handleMatchClick(btn, side) {
+  if (btn.classList.contains('matched')) return;
+  if (side === 'left') {
+    if (matchSelectedLeft) matchSelectedLeft.classList.remove('selected');
+    matchSelectedLeft = btn;
+    btn.classList.add('selected');
+  } else {
+    if (matchSelectedRight) matchSelectedRight.classList.remove('selected');
+    matchSelectedRight = btn;
+    btn.classList.add('selected');
+  }
+  if (matchSelectedLeft && matchSelectedRight) {
+    if (matchSelectedLeft.dataset.key === matchSelectedRight.dataset.key) {
+      matchSelectedLeft.classList.remove('selected');
+      matchSelectedRight.classList.remove('selected');
+      matchSelectedLeft.classList.add('matched');
+      matchSelectedRight.classList.add('matched');
+      matchesDone++;
+      document.getElementById('matchHint').textContent = `Matched: ${matchesDone} / 6`;
+      if (matchesDone === 6) {
+        document.getElementById('matchNextBtn').disabled = false;
+        document.getElementById('matchHint').textContent = `All matched! 🎉`;
+      }
+      matchSelectedLeft = null;
+      matchSelectedRight = null;
+    } else {
+      const l = matchSelectedLeft, r = matchSelectedRight;
+      l.classList.add('wrong-flash');
+      r.classList.add('wrong-flash');
+      setTimeout(() => {
+        l.classList.remove('selected','wrong-flash');
+        r.classList.remove('selected','wrong-flash');
+      }, 400);
+      matchSelectedLeft = null;
+      matchSelectedRight = null;
+    }
+  }
+}
+
+/* ================== STAGE 3: FILL ================== */
+let selectedBankWord = null;
+let filledBlanks = {};
+
+function renderFill() {
+  const passageEl = document.getElementById('fillPassage');
+  passageEl.innerHTML =
+    `A group of students wanted to <span class="blank empty" data-key="find_out" onclick="handleBlankClick(this)"></span> how much waste their school produced each day. ` +
+    `They decided to <span class="blank empty" data-key="set_up" onclick="handleBlankClick(this)"></span> recycling boxes for paper and plastic. ` +
+    `They also asked classmates to <span class="blank empty" data-key="sort_out" onclick="handleBlankClick(this)"></span> their waste carefully. ` +
+    `At first, many students did not <span class="blank empty" data-key="pay_attention" onclick="handleBlankClick(this)"></span> the recycling signs, ` +
+    `so the team <span class="blank empty" data-key="come_up_with" onclick="handleBlankClick(this)"></span> a simple points game. ` +
+    `With more students joining the project, the team was able to <span class="blank empty" data-key="carry_out" onclick="handleBlankClick(this)"></span> the plan for an entire month.`;
+
+  const bank = document.getElementById('wordBank');
+  bank.innerHTML = '';
+  shuffle(fillBlanks).forEach(w => {
+    const b = document.createElement('button');
+    b.className = 'bank-word';
+    b.textContent = w.text;
+    b.dataset.key = w.key;
+    b.dataset.text = w.text;
+    b.onclick = () => handleBankClick(b);
+    bank.appendChild(b);
+  });
+  updateFillHint();
+}
+
+function handleBankClick(btn) {
+  if (btn.disabled) return;
+  if (selectedBankWord) selectedBankWord.classList.remove('selected');
+  if (selectedBankWord === btn) { selectedBankWord = null; return; }
+  selectedBankWord = btn;
+  btn.classList.add('selected');
+}
+
+function handleBlankClick(blankEl) {
+  const blankKey = blankEl.dataset.key;
+  if (filledBlanks[blankKey]) {
+    const info = filledBlanks[blankKey];
+    info.buttonEl.disabled = false;
+    delete filledBlanks[blankKey];
+    blankEl.classList.add('empty');
+    blankEl.textContent = '';
+    updateFillHint();
+    return;
+  }
+  if (!selectedBankWord) return;
+  filledBlanks[blankKey] = {
+    key: selectedBankWord.dataset.key,
+    text: selectedBankWord.dataset.text,
+    buttonEl: selectedBankWord
+  };
+  blankEl.classList.remove('empty');
+  blankEl.textContent = selectedBankWord.dataset.text;
+  selectedBankWord.disabled = true;
+  selectedBankWord.classList.remove('selected');
+  selectedBankWord = null;
+  updateFillHint();
+}
+
+function updateFillHint() {
+  const count = Object.keys(filledBlanks).length;
+  document.getElementById('fillHint').textContent = `Filled: ${count} / 6`;
+  document.getElementById('checkFillBtn').disabled = (count < 6);
+}
+
+function checkFill() {
+  fillScore = 0;
+  document.querySelectorAll('.blank').forEach(blankEl => {
+    const blankKey = blankEl.dataset.key;
+    const filled = filledBlanks[blankKey];
+    const isCorrect = filled && filled.key === blankKey;
+    if (isCorrect) {
+      fillScore++;
+      blankEl.classList.add('correct');
+    } else {
+      blankEl.classList.add('incorrect');
+      const correctText = fillBlanks.find(f => f.key === blankKey).text;
+      const fix = document.createElement('span');
+      fix.className = 'fix';
+      fix.textContent = `✓ ${correctText}`;
+      blankEl.appendChild(fix);
+    }
+  });
+  document.getElementById('fillHint').textContent = `Score: ${fillScore} / 6`;
+  document.getElementById('checkFillBtn').style.display = 'none';
+  document.getElementById('fillNextBtn').style.display = 'inline-block';
+  document.querySelectorAll('.bank-word').forEach(b => b.disabled = true);
+}
+
+/* ================== STAGE 4: APPLY (MC) ================== */
+let mcAnswers = {};
+
+function renderMc() {
+  const container = document.getElementById('mcContainer');
+  container.innerHTML = '';
+  mcQuestions.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'mc-question';
+    div.innerHTML = `
+      <div class="qnum">Question ${i+1} of 6</div>
+      <div class="sentence">${q.sentence}</div>
+      <div class="mc-options" id="mcOpts-${i}"></div>
+    `;
+    container.appendChild(div);
+    const optsWrap = div.querySelector(`#mcOpts-${i}`);
+    q.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'mc-opt';
+      btn.textContent = opt;
+      btn.onclick = () => handleMcClick(i, opt, btn);
+      optsWrap.appendChild(btn);
+    });
+  });
+  updateMcHint();
+}
+
+function handleMcClick(qIndex, optText, btnEl) {
+  const parent = btnEl.parentElement;
+  Array.from(parent.children).forEach(c => c.classList.remove('chosen'));
+  btnEl.classList.add('chosen');
+  mcAnswers[qIndex] = optText;
+  updateMcHint();
+}
+
+function updateMcHint() {
+  const count = Object.keys(mcAnswers).length;
+  document.getElementById('mcHint').textContent = `Answered: ${count} / 6`;
+  document.getElementById('submitMcBtn').disabled = (count < 6);
+}
+
+function checkMc() {
+  mcScore = 0;
+  mcQuestions.forEach((q, i) => {
+    const correctText = phraseTextForKey(q.correct);
+    const chosenText = mcAnswers[i];
+    const parent = document.getElementById(`mcOpts-${i}`);
+    Array.from(parent.children).forEach(btn => {
+      btn.disabled = true;
+      if (btn.textContent === correctText) {
+        btn.classList.add('correct-answer');
+      } else if (btn.textContent === chosenText && chosenText !== correctText) {
+        btn.classList.add('wrong-chosen');
+      }
+    });
+    if (chosenText === correctText) mcScore++;
+  });
+  document.getElementById('mcHint').textContent = `Score: ${mcScore} / 6`;
+  document.getElementById('submitMcBtn').style.display = 'none';
+  document.getElementById('mcNextBtn').style.display = 'inline-block';
+}
+
+/* ================== STAGE 5: RESULT ================== */
+function showResult() {
+  const total = fillScore + mcScore;
+  const pct = Math.round((total / 12) * 100);
+  document.getElementById('scoreCircle').style.setProperty('--pct', pct + '%');
+  document.getElementById('scoreNum').textContent = `${total}/12`;
+
+  let msg, sub;
+  if (pct >= 90) { msg = "🌟 Excellent work!"; sub = "You really understand these expressions."; }
+  else if (pct >= 70) { msg = "👍 Great job!"; sub = "You're doing well — review any mistakes above."; }
+  else if (pct >= 50) { msg = "💪 Good effort!"; sub = "Keep practicing these expressions."; }
+  else { msg = "🌱 Nice try!"; sub = "Go back and review the meanings — you'll improve fast."; }
+  document.getElementById('resultMsg').textContent = msg;
+  document.getElementById('resultSub').textContent = sub;
+
+  document.getElementById('recapList').innerHTML = expressions.map(e => `
+    <div class="recap-item"><b>${e.phrase}</b><span>${e.def}</span></div>
+  `).join('');
+}
+
+/* ================== TEXT-TO-SPEECH (Pronunciation Audio) ================== */
+function speakText(text, rate) {
+  if (!('speechSynthesis' in window)) {
+    alert('Sorry, your browser does not support audio playback for speech.');
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'en-US';
+  utter.rate = rate || 1.0;
+  window.speechSynthesis.speak(utter);
+}
+
+/* ================== FLASHCARDS ================== */
+let fcIndex = 0;
+let fcFlipped = false;
+
+function renderFlashcard() {
+  const e = expressions[fcIndex];
+  document.getElementById('fcCounter').textContent = `Card ${fcIndex+1} / ${expressions.length}`;
+  document.getElementById('fcPhraseFront').textContent = e.phrase;
+  document.getElementById('fcPhraseBack').textContent = e.phrase;
+  document.getElementById('fcPhonetic').textContent = e.phonetic;
+  document.getElementById('fcDef').textContent = e.def + '  (' + e.kr + ')';
+  document.getElementById('fcExamples').innerHTML = e.examples.map((ex,i) => `<div><b>Ex ${i+1}:</b> ${ex}</div>`).join('');
+  document.getElementById('fcCard').classList.remove('flipped');
+  fcFlipped = false;
+  document.getElementById('pronResult').innerHTML = '';
+  const micBtn = document.getElementById('micBtn');
+  micBtn.classList.remove('recording');
+  micBtn.textContent = '🎤 Start Recording';
+}
+
+function flipCard() {
+  fcFlipped = !fcFlipped;
+  document.getElementById('fcCard').classList.toggle('flipped', fcFlipped);
+}
+
+function nextCard() {
+  fcIndex = (fcIndex + 1) % expressions.length;
+  renderFlashcard();
+}
+function prevCard() {
+  fcIndex = (fcIndex - 1 + expressions.length) % expressions.length;
+  renderFlashcard();
+}
+
+function playCardAudio() {
+  const e = expressions[fcIndex];
+  const rate = parseFloat(document.getElementById('speedSelect').value) || 1.0;
+  speakText(e.phrase, rate);
+}
+
+/* ---- Pronunciation Assessment (Web Speech API recognition) ---- */
+let recognition = null;
+let isRecording = false;
+
+function getRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  const r = new SR();
+  r.lang = 'en-US';
+  r.interimResults = false;
+  r.maxAlternatives = 1;
+  return r;
+}
+
+function similarity(a, b) {
+  a = a.toLowerCase().trim(); b = b.toLowerCase().trim();
+  const wordsA = a.split(/\s+/), wordsB = b.split(/\s+/);
+  const setB = new Set(wordsB);
+  let matches = 0;
+  wordsA.forEach(w => { if (setB.has(w)) matches++; });
+  const denom = Math.max(wordsA.length, wordsB.length);
+  let wordScore = denom ? matches / denom : 0;
+
+  // character-level Levenshtein-based similarity as a secondary signal
+  const dist = levenshtein(a, b);
+  const charScore = 1 - dist / Math.max(a.length, b.length, 1);
+
+  return Math.max(0, Math.min(1, (wordScore * 0.6 + charScore * 0.4)));
+}
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length:m+1}, () => new Array(n+1).fill(0));
+  for (let i=0;i<=m;i++) dp[i][0]=i;
+  for (let j=0;j<=n;j++) dp[0][j]=j;
+  for (let i=1;i<=m;i++){
+    for (let j=1;j<=n;j++){
+      if (a[i-1]===b[j-1]) dp[i][j]=dp[i-1][j-1];
+      else dp[i][j]=1+Math.min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+
+function toggleRecording() {
+  const target = expressions[fcIndex].phrase;
+  const resultDiv = document.getElementById('pronResult');
+  const micBtn = document.getElementById('micBtn');
+
+  if (isRecording) {
+    if (recognition) recognition.stop();
+    return;
+  }
+
+  recognition = getRecognition();
+  if (!recognition) {
+    resultDiv.innerHTML = `<div class="pron-heard">⚠️ Speech recognition is not supported in this browser. Try Chrome on desktop or Android.</div>`;
+    return;
+  }
+
+  isRecording = true;
+  micBtn.classList.add('recording');
+  micBtn.textContent = '⏹️ Stop Recording';
+  resultDiv.innerHTML = `<div class="pron-heard">🎧 Listening... say: "${target}"</div>`;
+
+  recognition.onresult = (event) => {
+    const heard = event.results[0][0].transcript;
+    const score = Math.round(similarity(heard, target) * 100);
+    let cls = 'low';
+    if (score >= 80) cls = 'good';
+    else if (score >= 55) cls = 'mid';
+    resultDiv.innerHTML = `
+      <div>Accuracy: <span class="pron-score ${cls}">${score}%</span></div>
+      <div class="pron-heard">We heard: "${heard}"</div>
+      <div class="pron-heard">Target: "${target}"</div>
+    `;
+  };
+
+  recognition.onerror = (event) => {
+    resultDiv.innerHTML = `<div class="pron-heard">⚠️ Could not recognize speech (${event.error}). Please try again.</div>`;
+  };
+
+  recognition.onend = () => {
+    isRecording = false;
+    micBtn.classList.remove('recording');
+    micBtn.textContent = '🎤 Start Recording';
+  };
+
+  recognition.start();
+}
+
+/* ================== ASSESSMENT CENTER ================== */
+let assessMode = '';         // 'spelling' | 'word' | 'meaning' | 'mixed'
+let assessQueue = [];        // array of {key, type}
+let assessRoundResults = []; // per-item correctness this round
+let assessIncorrectPool = []; // keys+type to retake
+let isRetakeRound = false;
+
+function startAssessment(mode) {
+  assessMode = mode;
+  isRetakeRound = false;
+  const keys = shuffle(expressions.map(e => e.key));
+  assessQueue = keys.map(k => ({
+    key: k,
+    type: mode === 'mixed' ? ['spelling','word','meaning'][Math.floor(Math.random()*3)] : mode
+  }));
+  runAssessmentRound();
+}
+
+function runAssessmentRound() {
+  hideAllSections();
+  setNavActive('assess');
+  document.getElementById('stage-assess-run').classList.add('visible');
+
+  const titleMap = {spelling:'✍️ Spelling Assessment', word:'🔤 Word Selection', meaning:'💡 Meaning Selection', mixed:'🎲 Mixed Review'};
+  document.getElementById('assessTitle').textContent = titleMap[assessMode] || '🧪 Assessment';
+
+  const instrMap = {
+    spelling: 'Read the meaning and type the correct expression in English.',
+    word: 'Read the meaning and choose the correct expression.',
+    meaning: 'Read the expression and choose the correct meaning.',
+    mixed: 'Answer each question — the type may change each time!'
+  };
+  document.getElementById('assessInstructions').innerHTML = `${instrMap[assessMode]} <span class="kr">뜻을 읽고 정답을 고르거나 입력하세요.</span>`;
+
+  const bannerWrap = document.getElementById('retakeBannerWrap');
+  bannerWrap.innerHTML = isRetakeRound
+    ? `<div class="retake-banner">🔁 Retake Round: You are only reviewing the ${assessQueue.length} word(s) you got wrong. Order is randomized. The session finishes once these are all correct.</div>`
+    : '';
+
+  const container = document.getElementById('assessContainer');
+  container.innerHTML = '';
+  assessRoundResults = new Array(assessQueue.length).fill(null);
+
+  assessQueue.forEach((item, i) => {
+    const e = expressions.find(x => x.key === item.key);
+    const div = document.createElement('div');
+    div.className = 'spell-item';
+    div.dataset.index = i;
+
+    if (item.type === 'spelling') {
+      div.innerHTML = `
+        <div class="prompt">Q${i+1}. Meaning: <b>${e.def}</b> (${e.kr})</div>
+        <input type="text" class="spell-input" id="ans-${i}" placeholder="Type the English expression..." autocomplete="off">
+        <div class="spell-feedback" id="fb-${i}"></div>
+      `;
+    } else if (item.type === 'word') {
+      const opts = shuffle([e.phrase, ...shuffle(expressions.filter(x=>x.key!==e.key)).slice(0,3).map(x=>x.phrase)]);
+      div.innerHTML = `
+        <div class="prompt">Q${i+1}. Meaning: <b>${e.def}</b> (${e.kr})</div>
+        <div class="mc-options" id="wordopts-${i}"></div>
+        <div class="spell-feedback" id="fb-${i}"></div>
+      `;
+      container.appendChild(div);
+      const optsWrap = div.querySelector(`#wordopts-${i}`);
+      opts.forEach(opt => {
+        const b = document.createElement('button');
+        b.className = 'mc-opt';
+        b.textContent = opt;
+        b.onclick = () => {
+          Array.from(optsWrap.children).forEach(c => c.classList.remove('chosen'));
+          b.classList.add('chosen');
+          optsWrap.dataset.chosen = opt;
+        };
+        optsWrap.appendChild(b);
+      });
+      return;
+    } else if (item.type === 'meaning') {
+      const correctDef = e.def;
+      const opts = shuffle([correctDef, ...shuffle(expressions.filter(x=>x.key!==e.key)).slice(0,3).map(x=>x.def)]);
+      div.innerHTML = `
+        <div class="prompt">Q${i+1}. Expression: <b>${e.phrase}</b></div>
+        <div class="mc-options" id="meanopts-${i}"></div>
+        <div class="spell-feedback" id="fb-${i}"></div>
+      `;
+      container.appendChild(div);
+      const optsWrap = div.querySelector(`#meanopts-${i}`);
+      opts.forEach(opt => {
+        const b = document.createElement('button');
+        b.className = 'mc-opt';
+        b.textContent = opt;
+        b.onclick = () => {
+          Array.from(optsWrap.children).forEach(c => c.classList.remove('chosen'));
+          b.classList.add('chosen');
+          optsWrap.dataset.chosen = opt;
+        };
+        optsWrap.appendChild(b);
+      });
+      return;
+    }
+    container.appendChild(div);
+  });
+
+  document.getElementById('assessHint').textContent = `${assessQueue.length} question(s)`;
+  document.getElementById('assessSubmitBtn').textContent = 'Check Answers';
+  document.getElementById('assessSubmitBtn').disabled = false;
+  document.getElementById('assessSubmitBtn').onclick = submitAssessmentRound;
+}
+
+function submitAssessmentRound() {
+  let correctCount = 0;
+  const wrongItems = [];
+
+  assessQueue.forEach((item, i) => {
+    const e = expressions.find(x => x.key === item.key);
+    const fb = document.getElementById(`fb-${i}`);
+    let isCorrect = false;
+    let userAnswerText = '';
+
+    if (item.type === 'spelling') {
+      const input = document.getElementById(`ans-${i}`);
+      userAnswerText = input.value.trim();
+      isCorrect = userAnswerText.toLowerCase() === e.phrase.toLowerCase();
+      input.disabled = true;
+      input.classList.add(isCorrect ? 'correct' : 'incorrect');
+      fb.className = 'spell-feedback ' + (isCorrect ? 'correct' : 'incorrect');
+      fb.textContent = isCorrect ? '✅ Correct!' : `❌ Incorrect — correct answer: "${e.phrase}"`;
+    } else if (item.type === 'word') {
+      const optsWrap = document.getElementById(`wordopts-${i}`);
+      userAnswerText = optsWrap.dataset.chosen || '';
+      isCorrect = userAnswerText === e.phrase;
+      Array.from(optsWrap.children).forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === e.phrase) btn.classList.add('correct-answer');
+        else if (btn.textContent === userAnswerText) btn.classList.add('wrong-chosen');
+      });
+      fb.className = 'spell-feedback ' + (isCorrect ? 'correct' : 'incorrect');
+      fb.textContent = isCorrect ? '✅ Correct!' : `❌ Incorrect — correct answer: "${e.phrase}"`;
+    } else if (item.type === 'meaning') {
+      const optsWrap = document.getElementById(`meanopts-${i}`);
+      userAnswerText = optsWrap.dataset.chosen || '';
+      isCorrect = userAnswerText === e.def;
+      Array.from(optsWrap.children).forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === e.def) btn.classList.add('correct-answer');
+        else if (btn.textContent === userAnswerText) btn.classList.add('wrong-chosen');
+      });
+      fb.className = 'spell-feedback ' + (isCorrect ? 'correct' : 'incorrect');
+      fb.textContent = isCorrect ? '✅ Correct!' : `❌ Incorrect — correct meaning: "${e.def}"`;
+    }
+
+    assessRoundResults[i] = isCorrect;
+    if (isCorrect) correctCount++;
+    else wrongItems.push(item);
+  });
+
+  document.getElementById('assessHint').textContent = `Score: ${correctCount} / ${assessQueue.length}`;
+  document.getElementById('assessSubmitBtn').textContent = wrongItems.length > 0 ? 'Continue to Retake →' : 'Finish ✔';
+  document.getElementById('assessSubmitBtn').onclick = () => {
+    if (wrongItems.length > 0) {
+      // build retake queue: only incorrect words, randomized, re-randomize their question type if mixed
+      assessQueue = shuffle(wrongItems).map(item => ({
+        key: item.key,
+        type: assessMode === 'mixed' ? ['spelling','word','meaning'][Math.floor(Math.random()*3)] : item.type
+      }));
+      isRetakeRound = true;
+      runAssessmentRound();
+    } else {
+      finishAssessment();
+    }
+  };
+}
+
+function finishAssessment() {
+  hideAllSections();
+  document.getElementById('stage-assess-done').classList.add('visible');
+  document.getElementById('assessScoreCircle').style.setProperty('--pct','100%');
+  document.getElementById('assessScoreNum').textContent = `${expressions.length}/${expressions.length}`;
+}
+
+/* ================== IMAGE / AUDIO GAME ================== */
+/* Simple SVG scene with 6 labeled icons representing each expression's concept.
+   Learner listens to the spoken phrase and clicks the matching icon. */
+const imgGameItems = shuffle(expressions.map(e => e.key));
+let imgGameIndex = 0;
+let imgGameScore = 0;
+let imgGameAnswered = false;
+
+const svgIcons = {
+  find_out: {x:40, y:40, w:140, h:110, label:'🔍 Magnifying Glass\n(find out)',
+    svg:`<circle cx="100" cy="80" r="34" fill="#a5d8ff" stroke="#1971c2" stroke-width="4"/><line x1="124" y1="104" x2="150" y2="130" stroke="#1971c2" stroke-width="8" stroke-linecap="round"/>`},
+  set_up: {x:220, y:40, w:140, h:110, label:'📦 Setting Up Boxes\n(set up)',
+    svg:`<rect x="240" y="70" width="50" height="45" fill="#ffd8a8" stroke="#e8590c" stroke-width="4"/><rect x="300" y="60" width="50" height="55" fill="#ffe066" stroke="#e8590c" stroke-width="4"/>`},
+  sort_out: {x:400, y:40, w:140, h:110, label:'♻️ Sorting Bins\n(sort out)',
+    svg:`<rect x="420" y="70" width="35" height="50" rx="6" fill="#8ce99a" stroke="#2f9e44" stroke-width="4"/><rect x="465" y="70" width="35" height="50" rx="6" fill="#a5d8ff" stroke="#1971c2" stroke-width="4"/><rect x="510" y="70" width="35" height="50" rx="6" fill="#ffc9c9" stroke="#e03131" stroke-width="4"/>`},
+  pay_attention: {x:40, y:200, w:140, h:110, label:'👀 Watching Sign\n(pay attention to)',
+    svg:`<circle cx="90" cy="240" r="16" fill="#ffe066"/><circle cx="90" cy="240" r="8" fill="#495057"/><rect x="130" y="220" width="55" height="45" fill="#fff" stroke="#e03131" stroke-width="4"/><text x="157" y="248" font-size="24" text-anchor="middle">!</text>`},
+  come_up_with: {x:220, y:200, w:140, h:110, label:'💡 Lightbulb Idea\n(come up with)',
+    svg:`<circle cx="290" cy="240" r="30" fill="#ffe066" stroke="#f08c00" stroke-width="4"/><line x1="280" y1="272" x2="300" y2="272" stroke="#f08c00" stroke-width="5"/>`},
+  carry_out: {x:400, y:200, w:140, h:110, label:'✅ Completing Task\n(carry out)',
+    svg:`<rect x="420" y="215" width="90" height="55" rx="8" fill="#d0ebff" stroke="#1971c2" stroke-width="4"/><path d="M435 245 L455 262 L495 225" stroke="#2f9e44" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`}
+};
+
+function initImgGame() {
+  imgGameIndex = 0;
+  imgGameScore = 0;
+  document.getElementById('imgGameHint').textContent = `Score: 0 / 6`;
+  renderImgScene();
+}
+
+function renderImgScene() {
+  const svg = document.getElementById('imgScene');
+  svg.innerHTML = '';
+  Object.entries(svgIcons).forEach(([key, spot]) => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.innerHTML = spot.svg;
+    svg.appendChild(g);
+
+    const hotspot = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    hotspot.setAttribute('x', spot.x);
+    hotspot.setAttribute('y', spot.y);
+    hotspot.setAttribute('width', spot.w);
+    hotspot.setAttribute('height', spot.h);
+    hotspot.setAttribute('fill', 'transparent');
+    hotspot.setAttribute('class', 'img-hotspot');
+    hotspot.dataset.key = key;
+    hotspot.onclick = () => handleImgClick(key, hotspot);
+    svg.appendChild(hotspot);
+  });
+  imgGameAnswered = false;
+  document.getElementById('imgWordCount').textContent = Math.min(imgGameIndex+1, imgGameItems.length);
+}
+
+function playImgWord() {
+  if (imgGameIndex >= imgGameItems.length) return;
+  const key = imgGameItems[imgGameIndex];
+  const phrase = phraseTextForKey(key);
+  speakText(phrase, 1.0);
+}
+
+function handleImgClick(key, hotspotEl) {
+  if (imgGameIndex >= imgGameItems.length || imgGameAnswered) return;
+  const targetKey = imgGameItems[imgGameIndex];
+  imgGameAnswered = true;
+  if (key === targetKey) {
+    hotspotEl.classList.add('correct');
+    imgGameScore++;
+  } else {
+    hotspotEl.classList.add('incorrect');
+    const correctSpot = document.querySelector(`.img-hotspot[data-key="${targetKey}"]`);
+    if (correctSpot) correctSpot.classList.add('correct');
+  }
+  document.getElementById('imgGameHint').textContent = `Score: ${imgGameScore} / 6`;
+  setTimeout(() => {
+    imgGameIndex++;
+    if (imgGameIndex < imgGameItems.length) {
+      renderImgScene();
+    } else {
+      document.getElementById('imgGameHint').textContent = `🎉 Finished! Final Score: ${imgGameScore} / 6`;
+    }
+  }, 900);
+}
+
+/* ================== INIT ================== */
+buildProgress();
+renderMeanings();
+renderMatch();
+renderFill();
+renderMc();
+</script>
+</body>
+</html>
