@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Building Better Study Habits</title>
+<style>
+  :root{
+    --navy:#1f2a44;
+    --navy-light:#324066;
+    --mustard:#e8a93a;
+    --coral:#e2604f;
+    --sage:#7c9885;
+    --paper:#f7f4ec;
+    --paper-dark:#eae4d3;
+    --ink:#2a2a28;
+    --line:#d8d0bd;
+    --radius:14px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:24px 14px 60px;
+    line-height:1.5;
+  }
+  .app{
+    width:100%;
+    max-width:640px;
+  }
+  h1,h2,h3{
+    font-family:Georgia, "Times New Roman", serif;
+    margin:0;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .topbar h1{
+    font-size:1.35rem;
+    color:var(--navy);
+  }
+  .badge{
+    background:var(--navy);
+    color:var(--paper);
+    font-size:0.72rem;
+    padding:5px 10px;
+    border-radius:20px;
+    letter-spacing:0.02em;
+    white-space:nowrap;
+  }
+  .progress{
+    display:flex;
+    gap:8px;
+    margin-bottom:22px;
+  }
+  .progress .dot{
+    flex:1;
+    height:8px;
+    border-radius:6px;
+    background:var(--paper-dark);
+    border:1px solid var(--line);
+    position:relative;
+    overflow:hidden;
+  }
+  .progress .dot.done{ background:var(--sage); border-color:var(--sage); }
+  .progress .dot.current{ background:var(--mustard); border-color:var(--mustard); }
+
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:26px 24px;
+    box-shadow:0 2px 0 var(--line);
+    min-height:340px;
+    display:flex;
+    flex-direction:column;
+  }
+  .step{ display:none; flex-direction:column; flex:1; }
+  .step.active{ display:flex; }
+
+  .step-label{
+    font-size:0.78rem;
+    color:var(--navy-light);
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin-bottom:4px;
+  }
+  .step h2{
+    font-size:1.5rem;
+    color:var(--navy);
+    margin-bottom:10px;
+  }
+  .step p.intro{
+    margin:0 0 18px;
+    color:#4a4a46;
+    font-size:0.98rem;
+  }
+
+  /* Vocabulary matching */
+  .match-wrap{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .match-col{ display:flex; flex-direction:column; gap:8px; }
+  .match-item{
+    border:2px solid var(--line);
+    background:var(--paper);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:0.92rem;
+    cursor:pointer;
+    text-align:left;
+    transition:transform .12s ease, border-color .12s ease, background .12s ease;
+  }
+  .match-item:hover{ border-color:var(--navy-light); }
+  .match-item:focus-visible{ outline:3px solid var(--coral); outline-offset:2px; }
+  .match-item.selected{ border-color:var(--mustard); background:#fff7e6; }
+  .match-item.matched{
+    background:#e9f2ea; border-color:var(--sage); color:#3d5c46; cursor:default;
+  }
+  .match-item.shake{ animation:shake .35s; }
+  @keyframes shake{
+    0%,100%{ transform:translateX(0); }
+    25%{ transform:translateX(-5px); }
+    75%{ transform:translateX(5px); }
+  }
+  .match-status{ font-size:0.85rem; color:var(--navy-light); margin-top:auto; padding-top:12px; }
+
+  /* Quiz */
+  .quiz-item{
+    border-top:1px solid var(--line);
+    padding:14px 0;
+  }
+  .quiz-item:first-child{ border-top:none; padding-top:0; }
+  .quiz-q{ font-size:0.98rem; margin-bottom:10px; }
+  .tf-buttons{ display:flex; gap:10px; }
+  .tf-btn{
+    flex:1;
+    padding:9px 0;
+    border-radius:8px;
+    border:2px solid var(--line);
+    background:#fff;
+    font-size:0.9rem;
+    font-weight:600;
+    cursor:pointer;
+    color:var(--navy);
+  }
+  .tf-btn:hover{ border-color:var(--navy-light); }
+  .tf-btn:focus-visible{ outline:3px solid var(--coral); outline-offset:2px; }
+  .tf-btn.correct{ background:#e9f2ea; border-color:var(--sage); color:#3d5c46; }
+  .tf-btn.wrong{ background:#fbe9e6; border-color:var(--coral); color:#8a3226; }
+  .tf-btn[disabled]{ cursor:default; opacity:0.75; }
+  .feedback{
+    margin-top:8px;
+    font-size:0.85rem;
+    color:#4a4a46;
+    display:none;
+  }
+  .feedback.show{ display:block; }
+
+  /* Checklist */
+  .checklist{ display:flex; flex-direction:column; gap:10px; margin-bottom:8px; }
+  .check-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    border:2px solid var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+    cursor:pointer;
+    font-size:0.92rem;
+  }
+  .check-row input{ width:18px; height:18px; accent-color:var(--sage); flex-shrink:0; }
+  .check-row.checked{ border-color:var(--sage); background:#f3f8f4; }
+  .checklist-result{
+    margin-top:auto;
+    padding-top:14px;
+    font-size:0.9rem;
+    color:var(--navy);
+    font-weight:600;
+  }
+
+  /* Goal step */
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block;
+    font-size:0.85rem;
+    font-weight:600;
+    color:var(--navy);
+    margin-bottom:5px;
+  }
+  .field input, .field select{
+    width:100%;
+    padding:9px 10px;
+    border-radius:8px;
+    border:2px solid var(--line);
+    font-size:0.95rem;
+    font-family:inherit;
+    background:#fff;
+    color:var(--ink);
+  }
+  .field input:focus, .field select:focus{
+    outline:none;
+    border-color:var(--mustard);
+  }
+
+  .goal-card{
+    display:none;
+    background:var(--navy);
+    color:var(--paper);
+    border-radius:var(--radius);
+    padding:22px;
+    text-align:center;
+    margin-top:auto;
+  }
+  .goal-card.show{ display:block; }
+  .goal-card .check-mark{
+    width:44px; height:44px;
+    border-radius:50%;
+    background:var(--mustard);
+    color:var(--navy);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.4rem;
+    margin:0 auto 12px;
+  }
+  .goal-card h3{ color:#fff; font-size:1.15rem; margin-bottom:6px; }
+  .goal-card p{ margin:4px 0; font-size:0.95rem; }
+  .goal-card .goal-text{ color:var(--mustard); font-weight:700; }
+
+  /* Nav buttons */
+  .nav-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:20px;
+  }
+  .btn{
+    padding:11px 22px;
+    border-radius:9px;
+    border:none;
+    font-size:0.95rem;
+    font-weight:600;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .btn-primary{ background:var(--navy); color:#fff; }
+  .btn-primary:hover{ background:var(--navy-light); }
+  .btn-primary[disabled]{ background:#b9b9b3; cursor:not-allowed; }
+  .btn-ghost{ background:transparent; color:var(--navy-light); }
+  .btn-ghost:hover{ text-decoration:underline; }
+  .btn-ghost[disabled]{ visibility:hidden; }
+  .btn:focus-visible{ outline:3px solid var(--coral); outline-offset:2px; }
+
+  .hint{
+    font-size:0.78rem;
+    color:#8a857a;
+    margin-top:10px;
+  }
+
+  @media (max-width:420px){
+    .match-wrap{ grid-template-columns:1fr; }
+    .card{ padding:20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <h1>Building Better Study Habits</h1>
+    <span class="badge">10 min · solo</span>
+  </div>
+
+  <div class="progress" id="progress">
+    <div class="dot" data-step="0"></div>
+    <div class="dot" data-step="1"></div>
+    <div class="dot" data-step="2"></div>
+    <div class="dot" data-step="3"></div>
+  </div>
+
+  <div class="card">
+
+    <!-- STEP 0: Vocabulary -->
+    <section class="step active" data-step="0">
+      <div class="step-label">Step 1 of 4 · Vocabulary</div>
+      <h2>Match the words</h2>
+      <p class="intro">Click a word, then click its meaning. Match all 6 pairs.</p>
+
+      <div class="match-wrap" id="matchWrap"></div>
+      <div class="match-status" id="matchStatus">Matched: 0 / 6</div>
+    </section>
+
+    <!-- STEP 1: Quiz -->
+    <section class="step" data-step="1">
+      <div class="step-label">Step 2 of 4 · Quick Check</div>
+      <h2>True or False?</h2>
+      <p class="intro">Read each sentence. Is it a good study habit or not?</p>
+      <div id="quizWrap"></div>
+    </section>
+
+    <!-- STEP 2: Checklist -->
+    <section class="step" data-step="2">
+      <div class="step-label">Step 3 of 4 · About Me</div>
+      <h2>Check your habits</h2>
+      <p class="intro">Which of these do you already do? There is no wrong answer — just be honest.</p>
+      <div class="checklist" id="checklistWrap"></div>
+      <div class="checklist-result" id="checklistResult"></div>
+    </section>
+
+    <!-- STEP 3: Goal -->
+    <section class="step" data-step="3">
+      <div class="step-label">Step 4 of 4 · My Goal</div>
+      <h2>Set one new habit</h2>
+      <p class="intro">Choose or write ONE small habit you want to start this week.</p>
+
+      <div class="field">
+        <label for="habitSelect">My new habit</label>
+        <select id="habitSelect">
+          <option value="">-- choose one --</option>
+          <option value="Study in a quiet place">Study in a quiet place</option>
+          <option value="Turn off my phone while studying">Turn off my phone while studying</option>
+          <option value="Make a to-do list before I study">Make a to-do list before I study</option>
+          <option value="Review my notes every day">Review my notes every day</option>
+          <option value="Take a 5-minute break every 25 minutes">Take a 5-minute break every 25 minutes</option>
+          <option value="__other">Write my own idea</option>
+        </select>
+      </div>
+      <div class="field" id="otherHabitField" style="display:none;">
+        <label for="otherHabit">My own idea</label>
+        <input type="text" id="otherHabit" maxlength="60" placeholder="e.g. Read for 10 minutes every night">
+      </div>
+      <div class="field">
+        <label for="startDay">I will start on</label>
+        <select id="startDay">
+          <option value="">-- choose a day --</option>
+          <option>Today</option>
+          <option>Tomorrow</option>
+          <option>Monday</option>
+          <option>Tuesday</option>
+          <option>Wednesday</option>
+          <option>Thursday</option>
+          <option>Friday</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" id="saveGoalBtn" style="align-self:flex-start;">Save my goal</button>
+
+      <div class="goal-card" id="goalCard">
+        <div class="check-mark">✓</div>
+        <h3>Nice work!</h3>
+        <p>My new habit:</p>
+        <p class="goal-text" id="goalCardHabit"></p>
+        <p>Starting: <span id="goalCardDay"></span></p>
+      </div>
+    </section>
+
+    <div class="nav-row">
+      <button class="btn btn-ghost" id="backBtn">Back</button>
+      <button class="btn btn-primary" id="nextBtn">Next</button>
+    </div>
+  </div>
+  <p class="hint" id="stepHint"></p>
+</div>
+
+<script>
+(function(){
+  var totalSteps = 4;
+  var current = 0;
+
+  var vocabPairs = [
+    {word:"habit", def:"something you do again and again"},
+    {word:"schedule", def:"a plan for what to do and when"},
+    {word:"focus", def:"to think carefully about one thing"},
+    {word:"break", def:"a short rest"},
+    {word:"goal", def:"something you want to do or reach"},
+    {word:"distraction", def:"something that takes your attention away"}
+  ];
+  var matchedCount = 0;
+  var selectedWord = null;
+  var selectedDef = null;
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for(var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  function buildMatch(){
+    var wrap = document.getElementById('matchWrap');
+    wrap.innerHTML = '';
+    var wordCol = document.createElement('div');
+    wordCol.className = 'match-col';
+    var defCol = document.createElement('div');
+    defCol.className = 'match-col';
+
+    var words = vocabPairs.map(function(p){ return p.word; });
+    var defs = shuffle(vocabPairs.map(function(p){ return p.def; }));
+
+    words.forEach(function(w){
+      var el = document.createElement('button');
+      el.className = 'match-item';
+      el.type = 'button';
+      el.textContent = w;
+      el.dataset.type = 'word';
+      el.dataset.value = w;
+      el.addEventListener('click', function(){ onMatchClick(el); });
+      wordCol.appendChild(el);
+    });
+    defs.forEach(function(d){
+      var el = document.createElement('button');
+      el.className = 'match-item';
+      el.type = 'button';
+      el.textContent = d;
+      el.dataset.type = 'def';
+      el.dataset.value = d;
+      el.addEventListener('click', function(){ onMatchClick(el); });
+      defCol.appendChild(el);
+    });
+
+    wrap.appendChild(wordCol);
+    wrap.appendChild(defCol);
+  }
+
+  function onMatchClick(el){
+    if(el.classList.contains('matched')) return;
+    if(el.dataset.type === 'word'){
+      if(selectedWord) selectedWord.classList.remove('selected');
+      selectedWord = el;
+      el.classList.add('selected');
+    } else {
+      if(selectedDef) selectedDef.classList.remove('selected');
+      selectedDef = el;
+      el.classList.add('selected');
+    }
+    if(selectedWord && selectedDef){
+      var pair = vocabPairs.find(function(p){ return p.word === selectedWord.dataset.value; });
+      if(pair && pair.def === selectedDef.dataset.value){
+        selectedWord.classList.remove('selected');
+        selectedDef.classList.remove('selected');
+        selectedWord.classList.add('matched');
+        selectedDef.classList.add('matched');
+        matchedCount++;
+        document.getElementById('matchStatus').textContent = 'Matched: ' + matchedCount + ' / 6';
+        selectedWord = null; selectedDef = null;
+        updateNextButton();
+      } else {
+        var w = selectedWord, d = selectedDef;
+        w.classList.add('shake');
+        d.classList.add('shake');
+        setTimeout(function(){
+          w.classList.remove('shake','selected');
+          d.classList.remove('shake','selected');
+        }, 350);
+        selectedWord = null; selectedDef = null;
+      }
+    }
+  }
+
+  var quizItems = [
+    {text:"Studying in a quiet room helps you focus.", answer:true, explain:"Right — less noise means fewer distractions."},
+    {text:"Checking your phone every few minutes helps you study better.", answer:false, explain:"Actually, it breaks your focus."},
+    {text:"Taking a short break after 25 minutes of studying is a good idea.", answer:true, explain:"Right — short breaks help your brain rest."},
+    {text:"Studying only the night before a test is a good habit.", answer:false, explain:"It's better to study a little every day."},
+    {text:"Making a to-do list before you study helps you stay organized.", answer:true, explain:"Right — a list helps you know what to do first."}
+  ];
+  var quizAnswered = 0;
+
+  function buildQuiz(){
+    var wrap = document.getElementById('quizWrap');
+    wrap.innerHTML = '';
+    quizItems.forEach(function(item, idx){
+      var row = document.createElement('div');
+      row.className = 'quiz-item';
+      row.innerHTML =
+        '<div class="quiz-q">' + (idx+1) + '. ' + item.text + '</div>' +
+        '<div class="tf-buttons">' +
+          '<button class="tf-btn" data-val="true" type="button">True</button>' +
+          '<button class="tf-btn" data-val="false" type="button">False</button>' +
+        '</div>' +
+        '<div class="feedback"></div>';
+      wrap.appendChild(row);
+
+      var buttons = row.querySelectorAll('.tf-btn');
+      var feedback = row.querySelector('.feedback');
+      buttons.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          if(btn.disabled === undefined || row.dataset.done === '1') return;
+          var chosen = btn.dataset.val === 'true';
+          buttons.forEach(function(b){ b.disabled = true; });
+          if(chosen === item.answer){
+            btn.classList.add('correct');
+          } else {
+            btn.classList.add('wrong');
+            buttons.forEach(function(b){
+              if(b.dataset.val === String(item.answer)) b.classList.add('correct');
+            });
+          }
+          feedback.textContent = item.explain;
+          feedback.classList.add('show');
+          row.dataset.done = '1';
+          quizAnswered++;
+          updateNextButton();
+        });
+      });
+    });
+  }
+
+  var checklistItems = [
+    "I study in a quiet place.",
+    "I turn off my phone when I study.",
+    "I take short breaks while studying.",
+    "I write down my homework.",
+    "I review my notes after class.",
+    "I ask for help when I don't understand.",
+    "I get enough sleep on school nights."
+  ];
+
+  function buildChecklist(){
+    var wrap = document.getElementById('checklistWrap');
+    wrap.innerHTML = '';
+    checklistItems.forEach(function(text, idx){
+      var row = document.createElement('label');
+      row.className = 'check-row';
+      row.innerHTML = '<input type="checkbox" id="chk'+idx+'"><span>'+text+'</span>';
+      var input = row.querySelector('input');
+      input.addEventListener('change', function(){
+        row.classList.toggle('checked', input.checked);
+        updateChecklistResult();
+      });
+      wrap.appendChild(row);
+    });
+    updateChecklistResult();
+  }
+
+  function updateChecklistResult(){
+    var checked = document.querySelectorAll('#checklistWrap input:checked').length;
+    var msg = '';
+    if(checked >= 5){ msg = "You already have strong study habits!"; }
+    else if(checked >= 2){ msg = "Good start! You're building solid habits."; }
+    else { msg = "Everyone starts somewhere — small steps count!"; }
+    document.getElementById('checklistResult').textContent = checked + ' / ' + checklistItems.length + ' checked. ' + msg;
+  }
+
+  var habitSelect = document.getElementById('habitSelect');
+  var otherField = document.getElementById('otherHabitField');
+  habitSelect.addEventListener('change', function(){
+    otherField.style.display = habitSelect.value === '__other' ? 'block' : 'none';
+  });
+
+  document.getElementById('saveGoalBtn').addEventListener('click', function(){
+    var habit = habitSelect.value === '__other'
+      ? document.getElementById('otherHabit').value.trim()
+      : habitSelect.value;
+    var day = document.getElementById('startDay').value;
+    if(!habit || !day){
+      document.getElementById('stepHint').textContent = 'Please choose a habit and a day before saving.';
+      return;
+    }
+    document.getElementById('stepHint').textContent = '';
+    document.getElementById('goalCardHabit').textContent = habit;
+    document.getElementById('goalCardDay').textContent = day;
+    document.getElementById('goalCard').classList.add('show');
+  });
+
+  function updateNextButton(){
+    var nextBtn = document.getElementById('nextBtn');
+    var hint = document.getElementById('stepHint');
+    if(current === 0){
+      nextBtn.disabled = matchedCount < vocabPairs.length;
+      hint.textContent = nextBtn.disabled ? 'Match all 6 pairs to continue.' : '';
+    } else if(current === 1){
+      nextBtn.disabled = quizAnswered < quizItems.length;
+      hint.textContent = nextBtn.disabled ? 'Answer all questions to continue.' : '';
+    } else {
+      nextBtn.disabled = false;
+      hint.textContent = '';
+    }
+  }
+
+  function showStep(idx){
+    document.querySelectorAll('.step').forEach(function(s){
+      s.classList.toggle('active', Number(s.dataset.step) === idx);
+    });
+    document.querySelectorAll('.progress .dot').forEach(function(d){
+      var ds = Number(d.dataset.step);
+      d.classList.remove('done','current');
+      if(ds < idx) d.classList.add('done');
+      else if(ds === idx) d.classList.add('current');
+    });
+    var nextBtn = document.getElementById('nextBtn');
+    var backBtn = document.getElementById('backBtn');
+    backBtn.disabled = idx === 0;
+    nextBtn.textContent = idx === totalSteps - 1 ? 'Finish' : 'Next';
+    updateNextButton();
+    if(idx === totalSteps - 1) nextBtn.style.display = 'none';
+    else nextBtn.style.display = 'inline-block';
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', function(){
+    if(current < totalSteps - 1){
+      current++;
+      showStep(current);
+    }
+  });
+  document.getElementById('backBtn').addEventListener('click', function(){
+    if(current > 0){
+      current--;
+      showStep(current);
+    }
+  });
+
+  buildMatch();
+  buildQuiz();
+  buildChecklist();
+  showStep(0);
+})();
+</script>
+
+</body>
+</html>
