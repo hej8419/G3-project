@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>분식 타이쿤: 설거지나 해!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+        body {
+            font-family: 'Jua', sans-serif;
+            background-color: #ffda79;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            user-select: none;
+        }
+
+        #game-container {
+            background-color: #f1f2f6;
+            border: 8px solid #ffb142;
+            border-radius: 20px;
+            padding: 20px;
+            width: 550px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        /* 헤더 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 22px;
+            background-color: #fff;
+            padding: 10px 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px #dfe4ea;
+            margin-bottom: 15px;
+        }
+        .time { color: #eb3b5a; font-weight: bold; }
+        .score-info { text-align: right; }
+        .target { color: #636e72; font-size: 16px; }
+        .score { color: #3867d6; font-size: 24px; font-weight: bold; }
+
+        /* 도구 팔레트 */
+        .toolbar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #dcdde1;
+            padding: 10px;
+            border-radius: 15px;
+        }
+        .tool-btn {
+            padding: 10px 5px;
+            font-size: 16px;
+            font-family: 'Jua', sans-serif;
+            background-color: #fff;
+            border: 3px solid #bdc3c7;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px #bdc3c7;
+        }
+        .tool-btn:active {
+            box-shadow: 0 0 #bdc3c7;
+            transform: translateY(4px);
+        }
+        .tool-btn.active {
+            border-color: #fc5c65;
+            background-color: #ffeaa7;
+            box-shadow: 0 4px #fc5c65;
+            transform: scale(1.05);
+        }
+
+        /* 가스레인지 */
+        .stove {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            background-color: #2f3640;
+            padding: 20px;
+            border-radius: 15px;
+            border: 5px solid #718093;
+        }
+
+        .pot-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .pot {
+            width: 120px;
+            height: 120px;
+            background-color: #d1ccc0; 
+            border: 6px solid #84817a;
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.3), 0 5px 10px rgba(0,0,0,0.5);
+            transition: background-color 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            font-size: 24px;
+            align-content: center;
+        }
+
+        /* 냄비 박살(분노) 연출 */
+        .pot.broken {
+            background-color: #2d3436 !important;
+            border-color: #000;
+            box-shadow: none;
+            cursor: not-allowed;
+            animation: shake 0.5s;
+        }
+        .pot.broken::before {
+            content: '❌';
+            font-size: 50px;
+            position: absolute;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            20% { transform: translate(-3px, 0px) rotate(10deg); }
+            40% { transform: translate(1px, -1px) rotate(-10deg); }
+            60% { transform: translate(-3px, 1px) rotate(10deg); }
+            80% { transform: translate(1px, -1px) rotate(-10deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        @keyframes boiling {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .boiling-anim {
+            animation: boiling 0.2s infinite;
+        }
+
+        .pot-status {
+            margin-top: 10px;
+            color: #fff;
+            font-size: 14px;
+            background: #e1b12c;
+            padding: 2px 10px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .floating-text {
+            position: absolute;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 0 #fff;
+            pointer-events: none;
+            animation: floatUp 1.2s ease-out forwards;
+            z-index: 100;
+            text-align: center;
+            width: 150px;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(1.2); }
+        }
+        
+        /* 오버레이 (시작 & 설명 화면) */
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 20px;
+            z-index: 10;
+            color: white;
+            text-align: center;
+        }
+        .menu-title {
+            font-size: 40px;
+            margin-bottom: 20px;
+            color: #ffda79;
+            text-shadow: 2px 2px 0 #eb3b5a;
+        }
+        .menu-btn {
+            font-size: 22px; 
+            margin: 10px; 
+            padding: 15px 25px;
+            background: #f1c40f; 
+            color: #2c3e50; 
+            border: none; 
+            border-radius: 15px;
+            cursor: pointer; 
+            font-family: 'Jua', sans-serif; 
+            box-shadow: 0 5px #f39c12;
+            transition: 0.1s;
+        }
+        .menu-btn:active { box-shadow: 0 0 #f39c12; transform: translateY(5px); }
+        
+        .start-btn {
+            background: #fc5c65;
+            color: white;
+            box-shadow: 0 5px #eb3b5a;
+        }
+        .start-btn:active { box-shadow: 0 0 #eb3b5a; }
+
+        .instruction-box {
+            text-align: left;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 80%;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 18px;
+        }
+        .instruction-box li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- 오버레이 화면 -->
+    <div id="overlay">
+        
+        <!-- 1. 메인 화면 -->
+        <div id="start-screen">
+            <h1 class="menu-title">🍽️ 설거지나 해! 🍽️</h1>
+            <p style="font-size: 20px; margin-bottom: 30px;">목표 금액: 10,000원<br>못 채우면 주방 설거지 확정!</p>
+            <button class="menu-btn" onclick="showScreen('instruction-screen')">📖 게임방법</button>
+            <button class="menu-btn start-btn" onclick="startGame()">▶ 게임하기</button>
+        </div>
+
+        <!-- 2. 게임 방법 화면 -->
+        <div id="instruction-screen" style="display: none;">
+            <h2 style="color: #ffda79;">📖 게임 방법</h2>
+            <div class="instruction-box">
+                <ul>
+                    <li><b>기본 재료:</b> 면과 스프는 언제든 넣어도 됩니다.</li>
+                    <li><b>타이밍 생명:</b> 파와 계란은 <b>물이 빨갛게 끓을 때("지금이야!!")</b> 넣어야 추가 점수(완벽)를 받습니다.</li>
+                    <li><b>분노 게이지:</b> 덜 익은 라면, 재료가 빠진 라면을 주거나 냄비를 까맣게 태우면 손님이 냄비를 엎어버립니다!</li>
+                    <li><b>냄비 교체:</b> 깨진 냄비는 단 <b>2번</b>만 교체 가능합니다.</li>
+                    <li>60초 안에 10,000원을 벌지 못하면 설거지를 해야 합니다.</li>
+                </ul>
+            </div>
+            <div>
+                <button class="menu-btn" onclick="showScreen('start-screen')">◀ 뒤로가기</button>
+                <button class="menu-btn start-btn" onclick="startGame()">▶ 게임하기</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="header">
+        <div class="time">⏰ <span id="timer-display">60</span>초</div>
+        <div class="score-info">
+            <div class="target">목표: 10,000원</div>
+            <div class="score">💰 <span id="score-display">0</span>원</div>
+        </div>
+    </div>
+
+    <!-- 도구 팔레트 -->
+    <div class="toolbar">
+        <button class="tool-btn active" id="tool-water" onclick="selectTool('water')">🫖 물</button>
+        <button class="tool-btn" id="tool-noodle" onclick="selectTool('noodle')">🍜 면</button>
+        <button class="tool-btn" id="tool-soup" onclick="selectTool('soup')">🍲 스프</button>
+        <button class="tool-btn" id="tool-serve" onclick="selectTool('serve')" style="background-color: #2bcbba; color: white;">🛎️ 서빙</button>
+        
+        <button class="tool-btn" id="tool-egg" onclick="selectTool('egg')">🥚 계란</button>
+        <button class="tool-btn" id="tool-greenOnion" onclick="selectTool('greenOnion')">🧅 파</button>
+        <button class="tool-btn" id="tool-replace" onclick="selectTool('replace')" style="background-color: #a4b0be; grid-column: span 2;">🛠️ 냄비 교체 (<span id="spare-pots-display">2</span>)</button>
+    </div>
+
+    <!-- 가스레인지 4구 -->
+    <div class="stove">
+        <div class="pot-wrapper">
+            <div class="pot" id="pot-0" onclick="interactPot(0)"></div>
+            <div class="pot-status" id="status-0">대기중</div>
+        </div>
+        <div class="pot-wrapper">
+            <div class="pot" id="pot-1" onclick="interactPot(1)"></div>
+            <div class="pot-status" id="status-1">대기중</div>
+        </div>
+        <div class="pot-wrapper">
+            <div class="pot" id="pot-2" onclick="interactPot(2)"></div>
+            <div class="pot-status" id="status-2">대기중</div>
+        </div>
+        <div class="pot-wrapper">
+            <div class="pot" id="pot-3" onclick="interactPot(3)"></div>
+            <div class="pot-status" id="status-3">대기중</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let audioCtx;
+    let score = 0;
+    let targetScore = 10000;
+    let timeLeft = 60;
+    let sparePots = 2;
+    let isGameRunning = false;
+    let gameLoop, timerInterval;
+    let activeTool = 'water';
+
+    // 화면 전환 함수
+    function showScreen(screenId) {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('instruction-screen').style.display = 'none';
+        document.getElementById(screenId).style.display = 'block';
+    }
+
+    // 냄비 상태 초기화 팩토리
+    const createEmptyPot = () => ({
+        state: 'empty', 
+        boilTime: 0,
+        hasNoodle: false,
+        hasSoup: false,
+        eggStatus: 'none',
+        onionStatus: 'none'
+    });
+
+    let pots = [createEmptyPot(), createEmptyPot(), createEmptyPot(), createEmptyPot()];
+
+    // Web Audio API 효과음
+    function playSound(type) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'crash') { 
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, now);
+            osc.frequency.exponentialRampToValueAtTime(10, now + 0.3);
+            gain.gain.setValueAtTime(0.5, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now); osc.stop(now + 0.3);
+        } else if (type === 'success') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.setValueAtTime(659, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.3);
+            osc.start(now); osc.stop(now + 0.3);
+        } else if (type === 'pop') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, now);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        }
+    }
+
+    function selectTool(tool) {
+        activeTool = tool;
+        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`tool-${tool}`).classList.add('active');
+    }
+
+    function startGame() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        // 오버레이 숨김
+        document.getElementById('overlay').style.display = 'none';
+        
+        isGameRunning = true;
+        score = 0; timeLeft = 60; sparePots = 2;
+        updateUI();
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-display').innerText = timeLeft;
+            if (timeLeft <= 0) endGame();
+        }, 1000);
+
+        gameLoop = setInterval(() => {
+            pots.forEach((pot, idx) => {
+                if (pot.state === 'cooking') {
+                    pot.boilTime += 0.5;
+                    
+                    if (pot.boilTime > 32) {
+                        pot.state = 'broken';
+                        playSound('crash');
+                        showFloatingText(idx, "우당탕탕! (태움)", "#d63031");
+                    }
+                    updatePotVisual(idx);
+                }
+            });
+        }, 500);
+    }
+
+    function interactPot(index) {
+        if (!isGameRunning) return;
+        const pot = pots[index];
+
+        if (activeTool === 'replace') {
+            if (pot.state === 'broken' && sparePots > 0) {
+                sparePots--;
+                document.getElementById('spare-pots-display').innerText = sparePots;
+                pots[index] = createEmptyPot();
+                playSound('pop');
+                updatePotVisual(index);
+            }
+            return;
+        }
+
+        if (pot.state === 'broken') return;
+
+        if (activeTool === 'water' && pot.state === 'empty') {
+            pot.state = 'cooking';
+            pot.boilTime = 0;
+            playSound('pop');
+            updatePotVisual(index);
+        } else if (activeTool === 'serve') {
+            if (pot.state === 'cooking') servePot(index);
+        } else if (pot.state === 'cooking') {
+            let added = false;
+            if (activeTool === 'noodle' && !pot.hasNoodle) { pot.hasNoodle = true; added = true; }
+            if (activeTool === 'soup' && !pot.hasSoup) { pot.hasSoup = true; added = true; }
+            
+            const isPerfectTiming = pot.boilTime >= 10 && pot.boilTime <= 24;
+            
+            if (activeTool === 'egg' && pot.eggStatus === 'none') {
+                pot.eggStatus = isPerfectTiming ? 'good' : 'bad';
+                added = true;
+            }
+            if (activeTool === 'greenOnion' && pot.onionStatus === 'none') {
+                pot.onionStatus = isPerfectTiming ? 'good' : 'bad';
+                added = true;
+            }
+
+            if (added) {
+                playSound('pop');
+                updatePotVisual(index);
+            }
+        }
+    }
+
+    function servePot(index) {
+        const pot = pots[index];
+        let earned = 0;
+        let msg = "";
+        let color = "";
+        let triggerCrash = false;
+
+        if (!pot.hasNoodle || !pot.hasSoup) {
+            earned = 0;
+            msg = "우당탕!! (재료 빠짐)";
+            triggerCrash = true;
+        } else if (pot.boilTime < 10) {
+            earned = 0;
+            msg = "우당탕!! (안 익음)";
+            triggerCrash = true;
+        } else if (pot.boilTime > 24) { 
+            earned = 500;
+            msg = "켁, 넘 짜! (+500)";
+            color = "#f39c12";
+        } else { 
+            earned = 600; 
+            if (pot.eggStatus === 'good') earned += 200;
+            if (pot.onionStatus === 'good') earned += 200;
+
+            if (earned === 1000) {
+                msg = "아주 좋아~ (+1000)";
+                color = "#2ecc71";
+            } else {
+                msg = `정성 부족... (+${earned})`;
+                color = "#e67e22";
+            }
+        }
+
+        score += earned;
+        updateUI();
+        showFloatingText(index, msg, color || "#d63031");
+
+        if (triggerCrash) {
+            pot.state = 'broken';
+            playSound('crash');
+        } else {
+            pots[index] = createEmptyPot();
+            playSound('success');
+        }
+        updatePotVisual(index);
+    }
+
+    function updatePotVisual(index) {
+        const pot = pots[index];
+        const potEl = document.getElementById(`pot-${index}`);
+        const statusEl = document.getElementById(`status-${index}`);
+
+        let emojis = "";
+        if (pot.hasNoodle) emojis += "🍜";
+        if (pot.hasSoup) emojis += "🍲";
+        if (pot.eggStatus !== 'none') emojis += "🥚";
+        if (pot.onionStatus !== 'none') emojis += "🧅";
+        potEl.innerHTML = pot.state === 'broken' ? '' : emojis;
+
+        potEl.className = 'pot'; 
+        if (pot.state === 'empty') {
+            potEl.style.backgroundColor = '#d1ccc0';
+            statusEl.innerText = '대기중';
+            statusEl.style.background = '#e1b12c';
+        } else if (pot.state === 'broken') {
+            potEl.classList.add('broken');
+            statusEl.innerText = '냄비 깨짐!!';
+            statusEl.style.background = '#d63031';
+        } else if (pot.state === 'cooking') {
+            if (pot.boilTime < 10) {
+                potEl.style.backgroundColor = '#74b9ff'; 
+                statusEl.innerText = '물 끓는 중...';
+                statusEl.style.background = '#0984e3';
+            } else if (pot.boilTime <= 24) {
+                potEl.style.backgroundColor = '#ff7675'; 
+                statusEl.innerText = '지금이야!!';
+                statusEl.style.background = '#e84118';
+                potEl.classList.add('boiling-anim');
+            } else {
+                potEl.style.backgroundColor = '#833471'; 
+                statusEl.innerText = '불고 있어...';
+                statusEl.style.background = '#6f1e51';
+            }
+        }
+    }
+
+    function showFloatingText(index, text, color) {
+        const potWrapper = document.querySelectorAll('.pot-wrapper')[index];
+        const floating = document.createElement('div');
+        floating.className = 'floating-text';
+        floating.innerText = text;
+        floating.style.color = color;
+        floating.style.top = '20px';
+        floating.style.left = '-15px';
+        
+        potWrapper.appendChild(floating);
+        setTimeout(() => floating.remove(), 1200);
+    }
+
+    function updateUI() {
+        document.getElementById('score-display').innerText = score.toLocaleString();
+        document.getElementById('spare-pots-display').innerText = sparePots;
+    }
+
+    function endGame() {
+        isGameRunning = false;
+        clearInterval(timerInterval);
+        clearInterval(gameLoop);
+        
+        setTimeout(() => {
+            if (score >= targetScore) {
+                alert(`🎉 성공! 훌륭한 라면 요리사입니다!\n최종 수익: ${score.toLocaleString()}원`);
+            } else {
+                // 게임 컨셉에 맞춘 실패 메시지 반영
+                alert(`😭 실패... 목표 금액 달성 실패!\n최종 수익: ${score.toLocaleString()}원\n\n주방으로 가서 당장 "설거지나 해!!" 🍽️🧽`);
+            }
+            location.reload();
+        }, 500);
+    }
+</script>
+
+</body>
+</html>
